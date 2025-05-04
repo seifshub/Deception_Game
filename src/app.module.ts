@@ -7,6 +7,9 @@ import { validationSchema } from './config/validation.schema';
 import AppConfig from './config/app.config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CommonModule } from './common/common.module';
+import { GraphQLModule } from '@nestjs/graphql';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -28,6 +31,10 @@ import { CommonModule } from './common/common.module';
         synchronize: config.database.synchronize,
       }),
       inject: [AppConfig.KEY],
+    }),
+    GraphQLModule.forRoot<ApolloDriverConfig>({
+      driver: ApolloDriver,
+      autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
     }),
     CommonModule,
   ],
