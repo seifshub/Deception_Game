@@ -6,6 +6,7 @@ import appConfig from './config/app.config';
 import { validationSchema } from './config/validation.schema';
 import AppConfig from './config/app.config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { CommonModule } from './common/common.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       }),
       inject: [AppConfig.KEY],
     }),
+    CommonModule,
   ],
   controllers: [AppController],
   providers: [AppService],
