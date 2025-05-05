@@ -6,7 +6,7 @@ type Item {
   id: Int!
   createdAt: DateTime!
   updatedAt: DateTime!
-  deletedAt: DateTime!
+  deletedAt: DateTime
 
   """Example field (placeholder)"""
   description: String!
