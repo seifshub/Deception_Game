@@ -10,6 +10,7 @@ import { CommonModule } from './common/common.module';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { join } from 'path';
+import { ItemsModule } from './items/items.module';
 
 @Module({
   imports: [
@@ -35,8 +36,12 @@ import { join } from 'path';
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
+      buildSchemaOptions: {
+        numberScalarMode: 'integer',
+      },
     }),
     CommonModule,
+    ItemsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
