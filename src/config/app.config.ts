@@ -5,7 +5,7 @@ export default registerAs('app', () => ({
   database: {
     host: process.env.DATABASE_HOST,
     port: parseInt(process.env.DATABASE_PORT!),
-    username: process.env.DATABASE_USER,
+    username: process.env.DATABASE_USERNAME,
     password: process.env.DATABASE_PASSWORD,
     name: process.env.DATABASE_NAME,
     synchronize: process.env.DATABASE_SYNCHRONIZATION === 'true',
