@@ -1,4 +1,4 @@
-import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { DeepPartial } from 'typeorm';
 import { GenericEntity } from '../entities/generic.entity';
 import { GenericCrudService } from '../services/generic.crud.service';
@@ -21,7 +21,7 @@ export function GenericResolver<
     }
 
     @Query(() => entity, { name: entity.name })
-    async findOne(@Args('id', { type: () => Int }) id: number): Promise<T> {
+    async findOne(@Args('id', { type: () => ID }) id: number): Promise<T> {
       return this.service.findOne(id);
     }
 
@@ -38,7 +38,7 @@ export function GenericResolver<
 
     @Mutation(() => entity, { name: `update${capitalize(entity.name)}` })
     async update(
-      @Args('id', { type: () => Int }) id: number,
+      @Args('id', { type: () => ID }) id: number,
       @Args({
         type: () => updateInputType,
         name: `update${capitalize(entity.name)}Input`,
@@ -49,9 +49,7 @@ export function GenericResolver<
     }
 
     @Mutation(() => Boolean, { name: `remove${capitalize(entity.name)}` })
-    async remove(
-      @Args('id', { type: () => Int }) id: number,
-    ): Promise<boolean> {
+    async remove(@Args('id', { type: () => ID }) id: number): Promise<boolean> {
       return this.service.delete(id);
     }
   }
