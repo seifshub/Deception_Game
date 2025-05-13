@@ -12,6 +12,8 @@ import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { join } from 'path';
 import { ItemsModule } from './items/items.module';
 import { UsersModule } from './users/users.module';
+import { TopicsModule } from './topics/topics.module';
+import { PromptsModule } from './prompts/prompts.module';
 
 @Module({
   imports: [
@@ -44,6 +46,8 @@ import { UsersModule } from './users/users.module';
     CommonModule,
     ItemsModule,
     UsersModule,
+    TopicsModule,
+    PromptsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
