@@ -4,11 +4,14 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { ObjectType } from '@nestjs/graphql';
+import { Field, ID, ObjectType } from '@nestjs/graphql';
 
 @ObjectType({ isAbstract: true })
 export abstract class GenericEntity {
   @PrimaryGeneratedColumn()
+  @Field(() => ID, {
+    nullable: false,
+  })
   id: number;
 
   @CreateDateColumn({
