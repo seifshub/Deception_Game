@@ -16,6 +16,7 @@ import { APP_FILTER } from '@nestjs/core';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { ValidationExceptionFilter } from './common/filters/validation-exception.filter';
 
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { ValidationExceptionFilter } from './common/filters/validation-exception
     }),
     CommonModule,
     ItemsModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [
