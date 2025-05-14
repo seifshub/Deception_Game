@@ -1,14 +1,17 @@
 import { GenericEntity } from '../../common/entities/generic.entity';
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, Unique } from 'typeorm';
 import { ObjectType } from '@nestjs/graphql';
+import { UQ_USER_EMAIL, UQ_USER_USERNAME } from '../users.constants';
 
 @Entity()
 @ObjectType()
+@Unique(UQ_USER_USERNAME, ['username'])
+@Unique(UQ_USER_EMAIL, ['email'])
 export class User extends GenericEntity {
-  @Column({ unique: true })
+  @Column()
   email: string;
 
-  @Column({ unique: true })
+  @Column()
   username: string;
 
   @Column()

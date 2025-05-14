@@ -12,6 +12,7 @@ import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { join } from 'path';
 import { ItemsModule } from './items/items.module';
 import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -40,10 +41,12 @@ import { UsersModule } from './users/users.module';
       buildSchemaOptions: {
         numberScalarMode: 'integer',
       },
+      context: ({ req, res }) => ({ req, res }),
     }),
     CommonModule,
     ItemsModule,
     UsersModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
