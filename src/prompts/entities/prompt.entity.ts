@@ -9,13 +9,10 @@ import { Topic } from '../../topics/entities/topic.entity';
 export class Prompt extends GenericEntity {
     
     @Column()
-    prompt_content: string;
+    promptContent: string;
 
     @Column()
-    correct_answer: string;
-
-    @Column()
-    source: string;
+    correctAnswer: string;
 
     @ManyToOne(() => Topic, topic => topic.prompts, { eager: true})
     topic: Topic;
