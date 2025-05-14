@@ -1,3 +1,5 @@
+import { Role } from '../../users/enums/role.enum';
+
 export interface ActiveUserData {
   /**
    * Subject of the token
@@ -8,4 +10,6 @@ export interface ActiveUserData {
   email: string;
 
   username: string;
+
+  role: Role;
 }

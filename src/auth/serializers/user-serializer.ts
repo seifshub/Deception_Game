@@ -11,6 +11,7 @@ export class UserSerializer extends PassportSerializer {
       sub: user.id,
       email: user.email,
       username: user.username,
+      role: user.role,
     });
   }
 
