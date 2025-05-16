@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer, NestModule  } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule, ConfigType } from '@nestjs/config';
@@ -11,6 +11,11 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { join } from 'path';
 import { ItemsModule } from './items/items.module';
+import { LoggerMiddleware } from './common/middleware/logger.middleware';
+import { APP_FILTER } from '@nestjs/core';
+import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
+import { ValidationExceptionFilter } from './common/filters/validation-exception.filter';
+
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { AccessControlModule } from './access-control/access-control.module';
@@ -51,6 +56,20 @@ import { AccessControlModule } from './access-control/access-control.module';
     AccessControlModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_FILTER,
+      useClass: GlobalExceptionFilter,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: ValidationExceptionFilter,
+    },
+  ],
 })
-export class AppModule {}
+export class AppModule implements NestModule { 
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('*');
+  }
+}
