@@ -1,0 +1,1 @@
+export const PG_UNIQUE_VIOLATION_KEY = '23505';

@@ -17,6 +17,8 @@ import { GlobalExceptionFilter } from './common/filters/global-exception.filter'
 import { ValidationExceptionFilter } from './common/filters/validation-exception.filter';
 
 import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
+import { AccessControlModule } from './access-control/access-control.module';
 
 @Module({
   imports: [
@@ -45,10 +47,13 @@ import { UsersModule } from './users/users.module';
       buildSchemaOptions: {
         numberScalarMode: 'integer',
       },
+      context: ({ req, res }) => ({ req, res }),
     }),
     CommonModule,
     ItemsModule,
     UsersModule,
+    AuthModule,
+    AccessControlModule,
   ],
   controllers: [AppController],
   providers: [
