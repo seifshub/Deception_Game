@@ -10,4 +10,7 @@ export default registerAs('app', () => ({
     name: process.env.DATABASE_NAME,
     synchronize: process.env.DATABASE_SYNCHRONIZATION === 'true',
   },
+  session: {
+    secret: process.env.SESSION_SECRET,
+  },
 }));
