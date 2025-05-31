@@ -26,6 +26,8 @@ import { TopicsModule } from './topics/topics.module';
 import { PromptsModule } from './prompts/prompts.module';
 import { AuthModule } from './auth/auth.module';
 import { AccessControlModule } from './access-control/access-control.module';
+import { AnswersModule } from './responses/responses.module';
+import { VotesModule } from './votes/votes.module';
 
 @Module({
   imports: [
@@ -63,6 +65,8 @@ import { AccessControlModule } from './access-control/access-control.module';
     PromptsModule,
     AuthModule,
     AccessControlModule,
+    AnswersModule,
+    VotesModule,
   ],
   controllers: [AppController],
   providers: [
