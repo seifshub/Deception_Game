@@ -34,23 +34,6 @@ enum FriendshipStatus {
   REJECTED
 }
 
-type User {
-  id: ID!
-  createdAt: DateTime!
-  updatedAt: DateTime!
-  deletedAt: DateTime
-  email: String!
-  username: String!
-  role: Role!
-  sentFriendRequests: [Friendship!]!
-  receivedFriendRequests: [Friendship!]!
-}
-
-enum Role {
-  Regular
-  Admin
-}
-
 type Game {
   id: ID!
   createdAt: DateTime!
@@ -99,13 +82,13 @@ type User {
   deletedAt: DateTime
   email: String!
   username: String!
-  password: String!
   role: Role!
+  sentFriendRequests: [Friendship!]!
+  receivedFriendRequests: [Friendship!]!
   hostedGames: [Game!]!
   joinedGames: [Game!]!
 }
 
-"""User roles"""
 enum Role {
   Regular
   Admin
@@ -123,7 +106,7 @@ type Mutation {
   updateItem(id: ID!, updateItemInput: UpdateItemInput!): Item!
   removeItem(id: ID!): Boolean!
   createGame(createGameInput: CreateGameInput!): Game!
-  updateGame(id: ID!, updateGameInput: UpdateGameInput!): Game!
+  updateGame(gameId: ID!, updateGameInput: UpdateGameInput!): Game!
   removeGame(id: ID!): Boolean!
   joinGame(gameId: ID!): Game!
 }

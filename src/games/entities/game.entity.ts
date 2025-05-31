@@ -7,8 +7,6 @@ import { GameSubstate } from '../enums/game.substate.enum';
 import { Visibility } from '../enums/game.visibilty.enum';
 
 
-
-
 @ObjectType()
 @Entity()
 @Unique('UQ_GAME_NAME', ['name'])

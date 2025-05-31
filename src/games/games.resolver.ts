@@ -9,6 +9,7 @@ import { ActiveUser } from '../auth/decorators/active-user.decorator';
 import { ActiveUserData } from '../auth/interfaces/active-user-data.interface';
 import { SessionGuard } from '../auth/guards/session.guard';
 
+@UseGuards(SessionGuard)
 @Resolver(() => Game)
 export class GamesResolver extends GenericResolver(
   Game as Type<Game> & Game,
@@ -19,7 +20,6 @@ export class GamesResolver extends GenericResolver(
     super(gamesService);
   }
 
-  @UseGuards(SessionGuard)
   @Mutation(() => Game)
   async createGame(
     @Args('createGameInput') createGameInput: CreateGameInput,
@@ -28,12 +28,20 @@ export class GamesResolver extends GenericResolver(
     return this.gamesService.createGameWithHost(createGameInput, user.sub);
   }
 
-  @UseGuards(SessionGuard)
   @Mutation(() => Game)
   async joinGame(
     @Args('gameId', { type: () => ID }) gameId: number,
     @ActiveUser() user: ActiveUserData,
   ): Promise<Game> {
     return this.gamesService.joinGame(gameId, user.sub);
+  }
+
+  @Mutation(() => Game)
+  async updateGame(
+    @Args('gameId', { type: () => ID }) gameId: number,
+    @Args('updateGameInput') updateGameInput: UpdateGameInput,
+    @ActiveUser() user: ActiveUserData,
+  ): Promise<Game> {
+    return this.gamesService.updateGame(gameId, updateGameInput, user.sub);
   }
 }
