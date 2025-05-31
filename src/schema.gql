@@ -17,6 +17,40 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
+type Friendship {
+  id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  deletedAt: DateTime
+  requester: User!
+  addressee: User!
+  status: FriendshipStatus!
+}
+
+"""The current status of a friendship request"""
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+type User {
+  id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  deletedAt: DateTime
+  email: String!
+  username: String!
+  role: Role!
+  sentFriendRequests: [Friendship!]!
+  receivedFriendRequests: [Friendship!]!
+}
+
+enum Role {
+  Regular
+  Admin
+}
+
 type Game {
   id: ID!
   createdAt: DateTime!
