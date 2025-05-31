@@ -53,6 +53,11 @@ import { GamesModule } from './games/games.module';
       buildSchemaOptions: {
         numberScalarMode: 'integer',
       },
+      playground: {
+        settings: {
+          'request.credentials': 'include',
+        },
+      },
       context: ({ req, res }) => ({ req, res }),
     }),
     CommonModule,
