@@ -1,10 +1,15 @@
-import { Module, MiddlewareConsumer, NestModule  } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule, ConfigType } from '@nestjs/config';
 import appConfig from './config/app.config';
-import { validationSchema } from './config/validation.schema';
 import AppConfig from './config/app.config';
+import { validationSchema } from './config/validation.schema';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CommonModule } from './common/common.module';
 import { GraphQLModule } from '@nestjs/graphql';
@@ -68,8 +73,11 @@ import { AccessControlModule } from './access-control/access-control.module';
     },
   ],
 })
-export class AppModule implements NestModule { 
+export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LoggerMiddleware).forRoutes('*');
+    consumer
+      .apply(LoggerMiddleware)
+      .exclude({ path: 'graphql', method: RequestMethod.ALL })
+      .forRoutes('*');
   }
 }
