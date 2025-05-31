@@ -1,18 +1,4 @@
 services:
-  app:
-    build: .
-    volumes:
-      - .:/app
-      - /app/node_modules  
-    ports:
-      - "3000:3000"
-    depends_on:
-      - postgres
-    env_file:
-      - .env
-    networks:
-      - backend
-
   postgres:
     image: postgres
     ports:
@@ -23,6 +9,26 @@ services:
       POSTGRES_DB: ${DATABASE_NAME}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks:
+      - backend
+      
+  app:
+    build: .
+    volumes:
+      - .:/app
+      - /app/node_modules  
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
     networks:
       - backend
 
@@ -30,7 +36,10 @@ services:
     image: adminer
     restart: always
     ports:
-      - "8080:8080"
+      - "8082:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - backend
 

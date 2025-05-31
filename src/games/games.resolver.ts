@@ -1,0 +1,39 @@
+import { Resolver, Mutation, Args, Query, ID } from '@nestjs/graphql';
+import { Game } from './entities/game.entity';
+import { GamesService } from './games.service';
+import { CreateGameInput } from './dto/create-game.input';
+import { UpdateGameInput } from './dto/update-game.input';
+import { GenericResolver } from '../common/resolvers/generic.resolver';
+import { Type, UseGuards } from '@nestjs/common';
+import { ActiveUser } from '../auth/decorators/active-user.decorator';
+import { ActiveUserData } from '../auth/interfaces/active-user-data.interface';
+import { SessionGuard } from '../auth/guards/session.guard';
+
+@Resolver(() => Game)
+export class GamesResolver extends GenericResolver(
+  Game as Type<Game> & Game,
+  CreateGameInput,
+  UpdateGameInput,
+) {
+  constructor(private readonly gamesService: GamesService) {
+    super(gamesService);
+  }
+
+  @UseGuards(SessionGuard)
+  @Mutation(() => Game)
+  async createGame(
+    @Args('createGameInput') createGameInput: CreateGameInput,
+    @ActiveUser() user: ActiveUserData,
+  ): Promise<Game> {
+    return this.gamesService.createGameWithHost(createGameInput, user.sub);
+  }
+
+  @UseGuards(SessionGuard)
+  @Mutation(() => Game)
+  async joinGame(
+    @Args('gameId', { type: () => ID }) gameId: number,
+    @ActiveUser() user: ActiveUserData,
+  ): Promise<Game> {
+    return this.gamesService.joinGame(gameId, user.sub);
+  }
+}

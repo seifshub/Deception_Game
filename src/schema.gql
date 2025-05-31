@@ -17,15 +17,81 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
+type Game {
+  id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  deletedAt: DateTime
+
+  """The host of the game"""
+  host: User!
+
+  """Players in the game"""
+  players: [User!]!
+  name: String!
+  status: GameState!
+  substate: GameSubstate!
+  visibility: Visibility!
+  size: Int!
+  current_size: Int!
+}
+
+enum GameState {
+  PREPARING
+  IN_PROGRESS
+  ABORTED
+  FINISHED
+}
+
+enum GameSubstate {
+  NA
+  CHOOSING_TOPIC
+  GIVING_ANSWER
+  VOTING
+  SHOWING_RESULTS
+}
+
+"""Visibility of the game,public or private or friends only"""
+enum Visibility {
+  PUBLIC
+  PRIVATE
+  FRIENDS_ONLY
+}
+
+type User {
+  id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  deletedAt: DateTime
+  email: String!
+  username: String!
+  password: String!
+  role: Role!
+  hostedGames: [Game!]!
+  joinedGames: [Game!]!
+}
+
+"""User roles"""
+enum Role {
+  Regular
+  Admin
+}
+
 type Query {
   Items: [Item!]!
   Item(id: ID!): Item!
+  Games: [Game!]!
+  Game(id: ID!): Game!
 }
 
 type Mutation {
   createItem(createItemInput: CreateItemInput!): Item!
   updateItem(id: ID!, updateItemInput: UpdateItemInput!): Item!
   removeItem(id: ID!): Boolean!
+  createGame(createGameInput: CreateGameInput!): Game!
+  updateGame(id: ID!, updateGameInput: UpdateGameInput!): Game!
+  removeGame(id: ID!): Boolean!
+  joinGame(gameId: ID!): Game!
 }
 
 input CreateItemInput {
@@ -36,4 +102,18 @@ input CreateItemInput {
 input UpdateItemInput {
   """Example field (placeholder)"""
   description: String
+}
+
+input CreateGameInput {
+  name: String!
+  size: Int
+  visibility: Visibility
+}
+
+input UpdateGameInput {
+  name: String
+  size: Int
+  visibility: Visibility
+  status: GameState
+  substate: GameSubstate
 }

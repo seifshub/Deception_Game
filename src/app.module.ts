@@ -19,6 +19,7 @@ import { ValidationExceptionFilter } from './common/filters/validation-exception
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { AccessControlModule } from './access-control/access-control.module';
+import { GamesModule } from './games/games.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { AccessControlModule } from './access-control/access-control.module';
     UsersModule,
     AuthModule,
     AccessControlModule,
+    GamesModule,
   ],
   controllers: [AppController],
   providers: [
