@@ -1,41 +1,61 @@
-import { Injectable, NestMiddleware } from '@nestjs/common';
+import { Injectable, NestMiddleware, Logger } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import * as morgan from 'morgan';
-import { Logger } from '@nestjs/common';
+
+interface ResponseWithBody extends Response {
+  body?: string;
+}
 
 @Injectable()
 export class LoggerMiddleware implements NestMiddleware {
   private logger = new Logger('HTTP');
 
-  constructor() {}
-
-  use(req: Request, res: Response, next: NextFunction) {
-    // Create a token for request body
+  constructor() {
     morgan.token('body', (req: Request) => {
-      if (req.body && Object.keys(req.body).length) {
-        // Avoid logging sensitive information
+      if (req.body && Object.keys(req.body).length > 0) {
         const safeBody = { ...req.body };
-        if (safeBody.password) safeBody.password = '[REDACTED]';
-        if (safeBody.token) safeBody.token = '[REDACTED]';
+        if ('password' in safeBody) safeBody.password = '[REDACTED]';
+        if ('token' in safeBody) safeBody.token = '[REDACTED]';
         return JSON.stringify(safeBody);
       }
       return '';
     });
 
-    // Create a token for response body
-    morgan.token('response-body', (req: Request, res: any) => {
-      if (res.body) {
-        return JSON.stringify(res.body);
-      }
-      return '';
+    morgan.token('response-body', (req: Request, res: ResponseWithBody) => {
+      if (process.env.NODE_ENV === 'production') return '';
+      if (res.body && res.body.length < 1000) return res.body;
+      return '[RESPONSE TOO LARGE OR OMITTED]';
     });
+  }
 
-    const format = 'dev';
+  use(req: Request, res: Response, next: NextFunction) {
+    const resWithBody = res as ResponseWithBody;
+    resWithBody.body = '';
 
-    morgan(format, {
-      stream: {
-        write: (message) => this.logger.log(message.trim()),
+    const oldWrite = res.write.bind(res);
+    const oldEnd = res.end.bind(res);
+
+    res.write = function (chunk: any, ...args: any[]): boolean {
+      if (chunk) {
+        resWithBody.body += chunk instanceof Buffer ? chunk.toString() : chunk;
+      }
+      return oldWrite(chunk, ...args);
+    };
+
+    res.end = function (chunk: any, ...args: any[]): any {
+      if (chunk) {
+        resWithBody.body += chunk instanceof Buffer ? chunk.toString() : chunk;
+      }
+      return oldEnd(chunk, ...args);
+    };
+
+    morgan(
+      ':method :url :status :res[content-length] - :response-time ms :body :response-body',
+      {
+        stream: {
+          write: (message: string) => this.logger.log(message.trim()),
+        },
       },
-    })(req, res, next);
+    )(req, resWithBody, next);
   }
 }

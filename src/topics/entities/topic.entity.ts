@@ -12,6 +12,9 @@ export class Topic extends GenericEntity {
     @Column({ nullable: true })
     description?: string;
 
+    @Column({ default: true})
+    isActive: boolean;
+
     @OneToMany(() => Prompt, prompt => prompt.topic)
     prompts?: Prompt[];
 }
