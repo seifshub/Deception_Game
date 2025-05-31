@@ -14,6 +14,9 @@ export class Prompt extends GenericEntity {
     @Column()
     correctAnswer: string;
 
+    @Column({ default: true})
+    isActive: boolean;
+
     @ManyToOne(() => Topic, topic => topic.prompts, { eager: false})
     topic: Topic;
 }

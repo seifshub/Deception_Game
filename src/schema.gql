@@ -51,6 +51,28 @@ enum Role {
   Admin
 }
 
+type Prompt {
+  id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  deletedAt: DateTime
+  promptContent: String!
+  correctAnswer: String!
+  isActive: Boolean!
+  topic: Topic!
+}
+
+type Topic {
+  id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  deletedAt: DateTime
+  name: String!
+  description: String
+  isActive: Boolean!
+  prompts: [Prompt!]
+}
+
 type Query {
   Items: [Item!]!
   Item(id: ID!): Item!
