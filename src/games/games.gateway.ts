@@ -197,7 +197,34 @@ export class GamesGateway
         }
     }
 
-    
+    @UseGuards(WsSessionGuard)
+    @SubscribeMessage('chooseTopic')
+    async handleChooseTopic(
+        @ConnectedSocket() client: Socket,
+        @MessageBody() payload: { gameId: number, topicId: number },
+        @WsActiveUser() user: ActiveUserData,
+    ) {
+        try {
+            const { gameId, topicId } = payload;
+            const game = await this.gamesService.addRoundToGame(gameId, topicId);
+
+            this.logger.log(`User ${user.username} chose topic ${topicId} for game ${gameId}`);
+
+            const currentRound = game.gameRounds[game.gameRounds.length - 1];
+            const currentPrompt = currentRound.prompt;
+
+            this.broadcastGameUpdate(gameId, 'answerPrompt', 
+                {
+                    roundId: currentRound.id,
+                    prompt: currentPrompt.promptContent,
+                });
+            return { success: true };
+        }
+        catch (error) {
+            this.logger.error(`User ${user.username} failed to choose topic for game ${payload.gameId}: ${error.message}`);
+            throw new WsException(`Failed to choose topic: ${error.message}`);
+        }
+    }
 
     //helper functions to broadcast game updates
 
