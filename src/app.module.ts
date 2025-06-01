@@ -14,6 +14,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { CommonModule } from './common/common.module';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 import { join } from 'path';
 import { ItemsModule } from './items/items.module';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
@@ -26,6 +27,7 @@ import { TopicsModule } from './topics/topics.module';
 import { PromptsModule } from './prompts/prompts.module';
 import { AuthModule } from './auth/auth.module';
 import { AccessControlModule } from './access-control/access-control.module';
+import { GamesModule } from './games/games.module';
 import { AnswersModule } from './responses/responses.module';
 import { VotesModule } from './votes/votes.module';
 
@@ -56,6 +58,9 @@ import { VotesModule } from './votes/votes.module';
       buildSchemaOptions: {
         numberScalarMode: 'integer',
       },
+      playground: false,
+      introspection: true,
+      plugins: [ApolloServerPluginLandingPageLocalDefault()],
       context: ({ req, res }) => ({ req, res }),
     }),
     CommonModule,

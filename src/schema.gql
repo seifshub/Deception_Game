@@ -34,6 +34,47 @@ enum FriendshipStatus {
   REJECTED
 }
 
+type Game {
+  id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  deletedAt: DateTime
+  status: GameState
+  substate: GameSubstate
+  visibility: Visibility
+
+  """The host of the game"""
+  host: User!
+
+  """Players in the game"""
+  players: [User!]!
+  name: String!
+  size: Int!
+  current_size: Int!
+}
+
+enum GameState {
+  PREPARING
+  IN_PROGRESS
+  ABORTED
+  FINISHED
+}
+
+enum GameSubstate {
+  NA
+  CHOOSING_TOPIC
+  GIVING_ANSWER
+  VOTING
+  SHOWING_RESULTS
+}
+
+"""Visibility of the game,public or private or friends only"""
+enum Visibility {
+  PUBLIC
+  PRIVATE
+  FRIENDS_ONLY
+}
+
 type User {
   id: ID!
   createdAt: DateTime!
@@ -44,6 +85,8 @@ type User {
   role: Role!
   sentFriendRequests: [Friendship!]!
   receivedFriendRequests: [Friendship!]!
+  hostedGames: [Game!]!
+  joinedGames: [Game!]!
 }
 
 enum Role {
@@ -76,12 +119,22 @@ type Topic {
 type Query {
   Items: [Item!]!
   Item(id: ID!): Item!
+  Games: [Game!]!
+  Game(id: ID!): Game!
+  getAvailableGames: [Game!]!
 }
 
 type Mutation {
   createItem(createItemInput: CreateItemInput!): Item!
   updateItem(id: ID!, updateItemInput: UpdateItemInput!): Item!
   removeItem(id: ID!): Boolean!
+  createGame(createGameInput: CreateGameInput!): Game!
+  updateGame(gameId: ID!, updateGameInput: UpdateGameInput!): Game!
+  removeGame(id: ID!): Boolean!
+  create(createInput: CreateGameInput!): Game!
+  joinGame(gameId: ID!): Game!
+  update(gameId: ID!, updateInput: UpdateGameInput!): Game!
+  leaveGame(gameId: ID!): Game!
 }
 
 input CreateItemInput {
@@ -92,4 +145,18 @@ input CreateItemInput {
 input UpdateItemInput {
   """Example field (placeholder)"""
   description: String
+}
+
+input CreateGameInput {
+  name: String!
+  size: Int
+  visibility: Visibility
+}
+
+input UpdateGameInput {
+  name: String
+  size: Int
+  visibility: Visibility
+  status: GameState
+  substate: GameSubstate
 }
