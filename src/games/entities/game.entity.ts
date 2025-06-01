@@ -1,4 +1,4 @@
-import { ObjectType, Field, registerEnumType } from '@nestjs/graphql';
+import { ObjectType, Field } from '@nestjs/graphql';
 import { GenericEntity } from '../../common/entities/generic.entity';
 import { Column, Entity, ManyToOne, ManyToMany, JoinTable, JoinColumn, Unique, Collection, OneToMany } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
@@ -10,7 +10,7 @@ import { Round } from '../../rounds/entities/round.entity';
 
 @ObjectType()
 @Entity()
-@Unique('UQ_GAME_NAME', ['name'])
+@Unique(UQ_GAME_NAME, ['name'])
 export class Game extends GenericEntity {
     @Column()
     name: string;

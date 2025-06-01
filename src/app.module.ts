@@ -28,6 +28,8 @@ import { PromptsModule } from './prompts/prompts.module';
 import { AuthModule } from './auth/auth.module';
 import { GamesModule } from './games/games.module';
 import { RoundsModule } from './rounds/rounds.module';
+import { ResponsesModule } from './responses/responses.module';
+import { VotesModule } from './votes/votes.module';
 
 @Module({
   imports: [
@@ -69,6 +71,8 @@ import { RoundsModule } from './rounds/rounds.module';
     AccessControlModule,
     GamesModule,
     RoundsModule,
+    ResponsesModule,
+    VotesModule,
   ],
   controllers: [AppController],
   providers: [
