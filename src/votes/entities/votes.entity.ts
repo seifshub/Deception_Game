@@ -6,13 +6,11 @@ import { Game } from '../../games/entities/game.entity';
 import { Prompt } from '../../prompts/entities/prompt.entity';
 import { PlayerResponse } from '../../responses/entities/response.entity';
 import { VoteStatus, VoteType } from '../enums';
-
-
-
-
+import { UQ_PLAYER_VOTE_UNIQUE } from '../votes.constants';
 
 @ObjectType()
 @Entity()
+@Unique(UQ_PLAYER_VOTE_UNIQUE, ['game', 'round', 'player'])
 @Index(['game', 'round']) 
 export class PlayerVote extends GenericEntity {
     @Field(() => Number, { description: 'Current round number' })
@@ -65,17 +63,17 @@ export class PlayerVote extends GenericEntity {
     points: number;
 
     @Field(() => User, { description: 'Player who cast this vote' })
-    @ManyToOne(() => User, { eager: true })
+    @ManyToOne(() => User, user => user.playerVotes, { eager: true })
     @JoinColumn({ name: 'player_id' })
     player: User;
 
     @Field(() => Game, { description: 'Game this vote belongs to' })
-    @ManyToOne(() => Game, { onDelete: 'CASCADE' })
+    @ManyToOne(() => Game, game => game.playerVotes, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'game_id' })
     game: Game;
 
     @Field(() => Prompt, { description: 'Prompt this vote is for' })
-    @ManyToOne(() => Prompt, { eager: true })
+    @ManyToOne(() => Prompt, prompt => prompt.playerVotes, { eager: true })
     @JoinColumn({ name: 'prompt_id' })
     prompt: Prompt;
 

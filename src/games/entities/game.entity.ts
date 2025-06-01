@@ -1,15 +1,18 @@
-import { ObjectType, Field, registerEnumType } from '@nestjs/graphql';
+import { ObjectType, Field } from '@nestjs/graphql';
 import { GenericEntity } from '../../common/entities/generic.entity';
-import { Column, Entity, ManyToOne, ManyToMany, JoinTable, JoinColumn, Unique } from 'typeorm';
+import { Column, Entity, ManyToOne, ManyToMany, JoinTable, JoinColumn, Unique, OneToMany } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { GameState } from '../enums/game.state.enum';
 import { GameSubstate } from '../enums/game.substate.enum';
 import { Visibility } from '../enums/game.visibilty.enum';
+import { PlayerVote } from '../../votes/entities/votes.entity';
+import { PlayerResponse } from '../../responses/entities/response.entity';
+import { UQ_GAME_NAME } from '../games.constants';
 
 
 @ObjectType()
 @Entity()
-@Unique('UQ_GAME_NAME', ['name'])
+@Unique(UQ_GAME_NAME, ['name'])
 export class Game extends GenericEntity {
     @Column()
     name: string;
@@ -43,7 +46,7 @@ export class Game extends GenericEntity {
         comment: 'The number of players required to start the game'
     })
     size: number;
-    
+
     @Column()
     current_size: number;
 
@@ -52,7 +55,7 @@ export class Game extends GenericEntity {
     @JoinColumn({ name: 'host_id' })
     host: User;
 
-    @Field(() => [User] , { description: 'Players in the game' })
+    @Field(() => [User], { description: 'Players in the game' })
     @ManyToMany(() => User, user => user.joinedGames, { eager: true })
     @JoinTable({
         name: 'game_players',
@@ -60,6 +63,12 @@ export class Game extends GenericEntity {
         inverseJoinColumn: { name: 'player_id', referencedColumnName: 'id' }
     })
     players: User[];
+
+    @OneToMany(() => PlayerResponse, response => response.game)
+    playerResponses: PlayerResponse[];
+
+    @OneToMany(() => PlayerVote, vote => vote.game)
+    playerVotes: PlayerVote[];
 
 
 }

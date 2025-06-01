@@ -1,0 +1,1 @@
+export const UQ_PLAYER_VOTE_UNIQUE = 'UQ_player_vote_unique';
