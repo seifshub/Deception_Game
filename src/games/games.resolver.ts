@@ -61,4 +61,13 @@ export class GamesResolver extends GenericResolver(
   ): Promise<Game> {
     return this.gamesService.updateGame(gameId, updateGameInput, user.sub);
   }
+
+  @Mutation(() => Game)
+  async leaveGame(
+    @Args('gameId', { type: () => ID }) gameId: number,
+    @ActiveUser() user: ActiveUserData,
+  ): Promise<Game> {
+    return this.gamesService.leaveGame(gameId, user.sub);
+    }
+
 }

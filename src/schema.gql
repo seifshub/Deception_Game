@@ -39,6 +39,9 @@ type Game {
   createdAt: DateTime!
   updatedAt: DateTime!
   deletedAt: DateTime
+  status: GameState
+  substate: GameSubstate
+  visibility: Visibility
 
   """The host of the game"""
   host: User!
@@ -46,9 +49,6 @@ type Game {
   """Players in the game"""
   players: [User!]!
   name: String!
-  status: GameState!
-  substate: GameSubstate!
-  visibility: Visibility!
   size: Int!
   current_size: Int!
 }
@@ -111,6 +111,7 @@ type Mutation {
   create(createInput: CreateGameInput!): Game!
   joinGame(gameId: ID!): Game!
   update(gameId: ID!, updateInput: UpdateGameInput!): Game!
+  leaveGame(gameId: ID!): Game!
 }
 
 input CreateItemInput {
