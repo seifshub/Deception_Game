@@ -19,6 +19,7 @@ import { WebSocketExceptionFilter } from 'src/common/filters/websocket-exception
 import { REQUEST_USER_KEY } from 'src/auth/decorators/keys';
 import { GameValidator } from './validators/game.validator';
 import { TopicsService } from 'src/topics/topics.service';
+import { Game } from './entities/game.entity';
 
 @UseFilters(WebSocketExceptionFilter)
 @WebSocketGateway({
@@ -167,26 +168,7 @@ export class GamesGateway
             this.broadcastGameUpdate(gameId,"gameStarted", updatedGame);
             this.logger.log(`User ${user.username} started game ${gameId}`);
 
-            // TODO: wrap this logic into a helper function later on (since it repeates each round)
-            const randomPlayer = updatedGame.players[Math.floor(Math.random() * updatedGame.players.length)];
-            const randomPlayerSocket = this.retrievePlayerSocket(randomPlayer.id);
-            
-            const topics = await this.topicService.getRandomTopics(5);
-
-            // Notify the chosen player to choose a topic
-            randomPlayerSocket.emit('chooseTopic', {
-                topics: topics,
-            });
-
-            this.broadcastGameUpdateExcludingOne(
-                gameId,
-                'PlayerIsChoosingTopic',
-                {
-                    playerId: randomPlayer.id,
-                    username: randomPlayer.username,
-                },
-                randomPlayer.id,
-            );
+            await this.choseTopic(updatedGame);
 
             return { success: true };
 
@@ -251,6 +233,28 @@ export class GamesGateway
         const roomName = `game:${gameId}`;
         const excludedUserSocket = this.retrievePlayerSocket(excludeUserId);
         excludedUserSocket.to(roomName).emit(event, data);
+    }
+
+    async choseTopic(game: Game) : Promise<void> {
+        const randomPlayer = game.players[Math.floor(Math.random() * game.players.length)];
+        const randomPlayerSocket = this.retrievePlayerSocket(randomPlayer.id);
+        
+        const topics = await this.topicService.getRandomTopics(5);
+
+        // Notify the chosen player to choose a topic
+        randomPlayerSocket.emit('chooseTopic', {
+            topics: topics,
+        });
+
+        this.broadcastGameUpdateExcludingOne(
+            game.id,
+            'PlayerIsChoosingTopic',
+            {
+                playerId: randomPlayer.id,
+                username: randomPlayer.username,
+            },
+            randomPlayer.id,
+        );
     }
 
 
