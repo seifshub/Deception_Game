@@ -8,6 +8,7 @@ import { TopicsModule } from 'src/topics/topics.module';
 @Module({
   imports: [TypeOrmModule.forFeature([Prompt]), TopicsModule],
   controllers: [PromptsController],
-  providers: [PromptsService]
+  providers: [PromptsService],
+  exports: [PromptsService]
 })
 export class PromptsModule {}

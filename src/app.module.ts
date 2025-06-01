@@ -27,6 +27,7 @@ import { TopicsModule } from './topics/topics.module';
 import { PromptsModule } from './prompts/prompts.module';
 import { AuthModule } from './auth/auth.module';
 import { GamesModule } from './games/games.module';
+import { RoundsModule } from './rounds/rounds.module';
 
 @Module({
   imports: [
@@ -63,11 +64,11 @@ import { GamesModule } from './games/games.module';
     CommonModule,
     ItemsModule,
     UsersModule,
-    TopicsModule,
-    PromptsModule,
+    TopicsModule,    PromptsModule,
     AuthModule,
     AccessControlModule,
     GamesModule,
+    RoundsModule,
   ],
   controllers: [AppController],
   providers: [

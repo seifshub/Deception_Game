@@ -1,10 +1,11 @@
 import { ObjectType, Field, registerEnumType } from '@nestjs/graphql';
 import { GenericEntity } from '../../common/entities/generic.entity';
-import { Column, Entity, ManyToOne, ManyToMany, JoinTable, JoinColumn, Unique, Collection } from 'typeorm';
+import { Column, Entity, ManyToOne, ManyToMany, JoinTable, JoinColumn, Unique, Collection, OneToMany } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { GameState } from '../enums/game.state.enum';
 import { GameSubstate } from '../enums/game.substate.enum';
 import { Visibility } from '../enums/game.visibilty.enum';
+import { Round } from '../../rounds/entities/round.entity';
 
 
 @ObjectType()
@@ -42,31 +43,29 @@ export class Game extends GenericEntity {
         default: 3,
         comment: 'The number of players required to start the game'
     })
-    size: number;
-
+    size: number;    
+    
     @Column({
         default: 3
     })
-    rounds: number;
-
-    @Column({
-        default: 0,
-    })
-    currentRound: number;
+    totalRounds: number;
 
     @Field(() => User, { description: 'The host of the game' })
     @ManyToOne(() => User, user => user.hostedGames, { eager: true })
     @JoinColumn({ name: 'host_id' })
-    host: User;
-
+    host: User;   
+     
     @Field(() => [User] , { description: 'Players in the game' })
     @ManyToMany(() => User, user => user.joinedGames, { eager: true })
     @JoinTable({
         name: 'game_players',
         joinColumn: { name: 'game_id', referencedColumnName: 'id' },
         inverseJoinColumn: { name: 'player_id', referencedColumnName: 'id' }
-    })
-    players: User[];
+    })    players: User[];
 
+    @Field(() => [Round], { description: 'Rounds in the game', nullable: true })
+    @OneToMany(() => Round, round => round.game, { eager:true, cascade: true })
+    @JoinColumn({ name: 'game_id' })
+    gameRounds: Round[];
 
 }

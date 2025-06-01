@@ -11,6 +11,9 @@ import { GameValidator } from './validators/game.validator';
 import { Visibility } from './enums/game.visibilty.enum';
 import { FriendshipService } from 'src/users/friendship.service';
 import { GameSubstate } from './enums/game.substate.enum';
+import { ForbiddenError } from '@nestjs/apollo';
+import { RoundsService } from 'src/rounds/rounds.service';
+import { PromptsService } from 'src/prompts/prompts.service';
 
 @Injectable()
 export class GamesService extends GenericCrudService<
@@ -23,6 +26,8 @@ export class GamesService extends GenericCrudService<
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     private readonly friendshipService: FriendshipService,
     private readonly gameValidator: GameValidator,
+    private readonly roundsService: RoundsService, 
+    private readonly promptService: PromptsService,
   ) {
     super(gameRepository);
   }
@@ -78,7 +83,6 @@ export class GamesService extends GenericCrudService<
     
     game.status = GameState.IN_PROGRESS;
     game.substate = GameSubstate.CHOOSING_TOPIC; 
-    game.currentRound = 1; 
     
     return this.gameRepository.save(game);
   }
@@ -154,20 +158,42 @@ async findAvailableGames(userId: number): Promise<Game[]> {
     return [...publicGames, ...friendsOnlyGames];
   }
 
-    async retrieveCurrentGame(userId: number): Promise<Game | null> {
-        // This method retrieves the game the user is currently in, if any
-        const user = await this.gameValidator.validateUserExists(userId);
-        
-        const game = await this.gameRepository.findOne({
-            where: {
-                players: { id: user.id },
-                status: In([GameState.IN_PROGRESS, GameState.PREPARING]),
-            },
-            relations: ['host', 'players'],
-        });
+  async retrieveCurrentGame(userId: number): Promise<Game | null> {
+      // This method retrieves the game the user is currently in, if any
+      const user = await this.gameValidator.validateUserExists(userId);
+      
+      const game = await this.gameRepository.findOne({
+          where: {
+              players: { id: user.id },
+              status: In([GameState.IN_PROGRESS, GameState.PREPARING]),
+          },
+          relations: ['host', 'players'],
+      });
 
-    return game || null;
+  return game || null;
+  }
+
+  async addRoundToGame(gameId: number, topicId: number): Promise<Game> {
+    const game = await this.gameValidator.validateGameExists(gameId);
+    
+    this.gameValidator.validateGameState(game, GameState.IN_PROGRESS);
+
+    const currentRound = game.gameRounds.length;
+    const prompt = await this.promptService.getRandomPrompt(topicId);
+
+    if (currentRound >= game.totalRounds) {
+      throw new ForbiddenError(`Cannot add more rounds, game has already reached the total of ${game.totalRounds} rounds.`);
     }
+
+    const round = await this.roundsService.createRound(game, prompt, currentRound + 1);
+    
+    game.gameRounds.push(round);
+    game.substate = GameSubstate.GIVING_ANSWER; // Set substate to giving answer
+
+    return this.gameRepository.save(game);
+  }
+
+  
 
   // These methods provide convenience wrappers around validator functions
   async verifyGameExists(gameId: number): Promise<Game> {

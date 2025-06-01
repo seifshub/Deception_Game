@@ -169,6 +169,7 @@ export class GamesGateway
             const randomPlayer = updatedGame.players[Math.floor(Math.random() * updatedGame.players.length)];
 
             // TODO: send topic to the random player
+            
 
             return { success: true };
 

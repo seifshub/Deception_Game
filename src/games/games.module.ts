@@ -8,12 +8,16 @@ import { CommonModule } from '../common/common.module';
 import { UsersModule } from 'src/users/users.module';
 import { GameValidator } from './validators/game.validator';
 import { GamesGateway } from './games.gateway';
+import { RoundsModule } from 'src/rounds/rounds.module';
+import { PromptsService } from 'src/prompts/prompts.service';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Game, User]),
     CommonModule,
     UsersModule,
+    RoundsModule,
+    PromptsService
   ],
   providers: [GamesResolver, GamesService, GameValidator, GamesGateway],
   exports: [GamesService],
