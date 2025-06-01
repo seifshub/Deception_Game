@@ -14,6 +14,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { CommonModule } from './common/common.module';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 import { join } from 'path';
 import { ItemsModule } from './items/items.module';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
@@ -24,6 +25,7 @@ import { ValidationExceptionFilter } from './common/filters/validation-exception
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { AccessControlModule } from './access-control/access-control.module';
+import { GamesModule } from './games/games.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 
@@ -54,6 +56,9 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
       buildSchemaOptions: {
         numberScalarMode: 'integer',
       },
+      playground: false,
+      introspection: true,
+      plugins: [ApolloServerPluginLandingPageLocalDefault()],
       context: ({ req, res }) => ({ req, res }),
     }),
     EventEmitterModule.forRoot(),
@@ -63,6 +68,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     AuthModule,
     AccessControlModule,
     NotificationsModule,
+    GamesModule,
   ],
   controllers: [AppController],
   providers: [

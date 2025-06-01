@@ -1,9 +1,12 @@
 import { GenericEntity } from '../../common/entities/generic.entity';
+import { Column, Entity, OneToMany, ManyToMany, Unique } from 'typeorm';
+import { HideField, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { Column, Entity, OneToMany, Unique } from 'typeorm';
 import { Field, HideField, ObjectType } from '@nestjs/graphql';
 import { UQ_USER_EMAIL, UQ_USER_USERNAME } from '../users.constants';
 import { Role } from '../enums/role.enum';
 import { Friendship } from './friendship.entity';
+import { Game } from '../../games/entities/game.entity';
 import { Notification } from '../../notifications/entities/notification.entity';
 
 @Entity()
@@ -33,4 +36,10 @@ export class User extends GenericEntity {
   @OneToMany(() => Notification, (notification) => notification.user)
   @Field(() => [Notification], { nullable: true })
   notifications: Notification[];
+
+  @OneToMany(() => Game, game => game.host)
+  hostedGames: Game[];
+
+  @ManyToMany(() => Game, game => game.players)
+  joinedGames: Game[];
 }
