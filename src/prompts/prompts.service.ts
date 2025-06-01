@@ -60,20 +60,9 @@ export class PromptsService extends GenericCrudService<Prompt> {
 
 
     async getRandomPrompt(topicId: number): Promise<Prompt> {
-        const prompt = await this.promptRepository
-            .createQueryBuilder('prompt')
-            .innerJoinAndSelect('prompt.topic', 'topic')
-            .where('prompt.topicId = :topicId', { topicId })
-            .andWhere('prompt.isActive = :promptIsActive', { promptIsActive: true })
-            .andWhere('topic.isActive = :topicIsActive', { topicIsActive: true })
-            .orderBy('RANDOM()')
-            .limit(1)
-            .getOne();
-
-        if (!prompt) {
-            throw new BadRequestException(`No active prompts found for topic ${topicId}`);
-        }
-
+        const prompts = await this.getRandomPrompts(topicId, 1)
+        const prompt = prompts[0];
+        
         return prompt;
     }
 
