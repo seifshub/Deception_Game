@@ -7,6 +7,7 @@ import { User } from '../users/entities/user.entity';
 import { CommonModule } from '../common/common.module';
 import { UsersModule } from 'src/users/users.module';
 import { GameValidator } from './validators/game.validator';
+import { GamesGateway } from './games.gateway';
 
 @Module({
   imports: [
@@ -14,7 +15,7 @@ import { GameValidator } from './validators/game.validator';
     CommonModule,
     UsersModule,
   ],
-  providers: [GamesResolver, GamesService, GameValidator],
+  providers: [GamesResolver, GamesService, GameValidator, GamesGateway],
   exports: [GamesService],
 })
 export class GamesModule {}
