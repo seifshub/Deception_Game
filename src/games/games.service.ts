@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { In, Or, Repository } from 'typeorm';
 import { Game } from './entities/game.entity';
 import { CreateGameInput } from './dto/create-game.input';
 import { UpdateGameInput } from './dto/update-game.input';
@@ -152,6 +152,21 @@ async findAvailableGames(userId: number): Promise<Game[]> {
     
     return [...publicGames, ...friendsOnlyGames];
   }
+
+    async retrieveCurrentGame(userId: number): Promise<Game | null> {
+        // This method retrieves the game the user is currently in, if any
+        const user = await this.gameValidator.validateUserExists(userId);
+        
+        const game = await this.gameRepository.findOne({
+            where: {
+                players: { id: user.id },
+                status: In([GameState.IN_PROGRESS, GameState.PREPARING]),
+            },
+            relations: ['host', 'players'],
+        });
+
+    return game || null;
+    }
 
   // These methods provide convenience wrappers around validator functions
   async verifyGameExists(gameId: number): Promise<Game> {
