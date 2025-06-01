@@ -28,7 +28,7 @@ import { PromptsModule } from './prompts/prompts.module';
 import { AuthModule } from './auth/auth.module';
 import { AccessControlModule } from './access-control/access-control.module';
 import { GamesModule } from './games/games.module';
-import { AnswersModule } from './responses/responses.module';
+import { ResponsesModule } from './responses/responses.module';
 import { VotesModule } from './votes/votes.module';
 
 @Module({
@@ -70,7 +70,8 @@ import { VotesModule } from './votes/votes.module';
     PromptsModule,
     AuthModule,
     AccessControlModule,
-    AnswersModule,
+    GamesModule,
+    ResponsesModule,
     VotesModule,
   ],
   controllers: [AppController],
