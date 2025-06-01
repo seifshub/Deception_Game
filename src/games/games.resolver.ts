@@ -21,6 +21,14 @@ export class GamesResolver extends GenericResolver(
   }
 
   @Mutation(() => Game)
+  async create(
+    @Args('createInput') createInput: CreateGameInput,
+    @ActiveUser() user: ActiveUserData,
+  ): Promise<Game> {
+    return this.gamesService.createGameWithHost(createInput, user.sub);
+  }
+
+  @Mutation(() => Game) 
   async createGame(
     @Args('createGameInput') createGameInput: CreateGameInput,
     @ActiveUser() user: ActiveUserData,
@@ -34,6 +42,15 @@ export class GamesResolver extends GenericResolver(
     @ActiveUser() user: ActiveUserData,
   ): Promise<Game> {
     return this.gamesService.joinGame(gameId, user.sub);
+  }
+
+  @Mutation(() => Game)
+  async update(
+    @Args('gameId', { type: () => ID }) gameId: number,
+    @Args('updateInput') updateInput: UpdateGameInput,
+    @ActiveUser() user: ActiveUserData,
+  ): Promise<Game> {
+    return this.gamesService.updateGame(gameId, updateInput, user.sub);
   }
 
   @Mutation(() => Game)

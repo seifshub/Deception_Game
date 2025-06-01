@@ -108,7 +108,9 @@ type Mutation {
   createGame(createGameInput: CreateGameInput!): Game!
   updateGame(gameId: ID!, updateGameInput: UpdateGameInput!): Game!
   removeGame(id: ID!): Boolean!
+  create(createInput: CreateGameInput!): Game!
   joinGame(gameId: ID!): Game!
+  update(gameId: ID!, updateInput: UpdateGameInput!): Game!
 }
 
 input CreateItemInput {

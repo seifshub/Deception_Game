@@ -29,9 +29,9 @@ export class GamesService extends GenericCrudService<
     
     const game = this.gameRepository.create({
       ...createGameInput,
+      current_size: 1,
       host,
       players: [host],
-      current_size: 1,
     });
     
     return this.gameRepository.save(game);

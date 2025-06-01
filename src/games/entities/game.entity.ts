@@ -14,6 +14,7 @@ export class Game extends GenericEntity {
     @Column()
     name: string;
 
+    @Field(() => GameState, { nullable: true })
     @Column({
         type: 'enum',
         enum: GameState,
@@ -21,6 +22,7 @@ export class Game extends GenericEntity {
     })
     status: GameState;
 
+    @Field(() => GameSubstate, { nullable: true })
     @Column({
         type: 'enum',
         enum: GameSubstate,
@@ -28,6 +30,7 @@ export class Game extends GenericEntity {
     })
     substate: GameSubstate;
 
+    @Field(() => Visibility, { nullable: true })
     @Column({
         type: 'enum',
         enum: Visibility,
@@ -40,7 +43,7 @@ export class Game extends GenericEntity {
         comment: 'The number of players required to start the game'
     })
     size: number;
-
+    
     @Column()
     current_size: number;
 
