@@ -46,8 +46,10 @@ export class AuthModule implements NestModule {
           resave: false,
           saveUninitialized: false,
           cookie: {
-            sameSite: true,
+            sameSite: 'lax', // Changed from 'lax' to 'none' for cross-origin
+            secure: false,    // In production this should be true, but for local development false
             httpOnly: true,
+            maxAge: 1000 * 60 * 60 * 24, // 1 day
           },
         }),
         passport.initialize(),
