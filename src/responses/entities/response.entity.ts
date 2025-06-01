@@ -40,7 +40,7 @@ export class PlayerResponse extends GenericEntity {
         type: 'timestamp',
         nullable: true,
     })
-    submitted_at: Date;
+    submittedAt: Date;
 
     @Field(() => Number, { description: 'Points earned from this response (players fooled)' })
     @Column({
@@ -64,6 +64,6 @@ export class PlayerResponse extends GenericEntity {
     @JoinColumn({ name: 'prompt_id' })
     prompt: Prompt;
 
-    @OneToMany(() => PlayerVote, vote => vote.voted_response)
+    @OneToMany(() => PlayerVote, vote => vote.votedResponse)
     votes: PlayerVote[];
 }

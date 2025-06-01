@@ -47,7 +47,7 @@ export class PlayerResponseService {
     this.playerResponseValidator.validateResponseDeadline(submissionDeadline);
 
     playerResponse.status = ResponseStatus.SUBMITTED;
-    playerResponse.submitted_at = new Date();
+    playerResponse.submittedAt = new Date();
 
     return this.playerResponseRepository.save(playerResponse);
   }

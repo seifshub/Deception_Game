@@ -24,7 +24,7 @@ export class PlayerResponseValidator {
   async validatePlayerResponseExists(responseId: number): Promise<PlayerResponse> {
     const response = await this.playerResponseRepository.findOne({
       where: { id: responseId },
-      relations: ['player', 'game', 'question'],
+      relations: ['player', 'game', 'prompt'],
     });
 
     if (!response) {

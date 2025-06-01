@@ -7,6 +7,8 @@ import { Game } from '../../games/entities/game.entity';
 import { User } from '../../users/entities/user.entity';
 import { Prompt } from '../../prompts/entities/prompt.entity';
 import { Repository } from 'typeorm';
+import { GameState, GameSubstate} from '../../games/enums'
+import { ResponseStatus } from '../../responses/enums'
 
 @Injectable()
 export class PlayerVoteValidator {
@@ -26,7 +28,7 @@ export class PlayerVoteValidator {
   async validatePlayerVoteExists(voteId: number): Promise<PlayerVote> {
     const vote = await this.playerVoteRepository.findOne({
       where: { id: voteId },
-      relations: ['player', 'game', 'question', 'voted_response'],
+      relations: ['player', 'game', 'prompt', 'votedResponse'],
     });
 
     if (!vote) {
@@ -71,7 +73,6 @@ export class PlayerVoteValidator {
   }
 
   async validatePlayerEligibleToVote(gameId: number, userId: number, round: number): Promise<void> {
-    // Check if player submitted a response for this round
     const playerResponse = await this.playerResponseRepository.findOne({
       where: {
         game: { id: gameId },
@@ -106,19 +107,17 @@ export class PlayerVoteValidator {
     }
   }
 
-  async validateAnswerExists(gameId: number, round: number, selectedAnswer: string): Promise<{ isCorrect: boolean; playerResponse?: PlayerResponse }> {
-    // First check if it's the correct answer (you'll need to implement this based on your Question entity)
+  async validateAnswerExists(gameId: number, round: number, promptId: number, selectedAnswer: string): Promise<{ isCorrect: boolean; prompt: Prompt; playerResponse?: PlayerResponse }> {
+    
     const prompt = await this.promptRepository.findOne({
-      where: { 
-        // Add your question lookup logic here based on game and round
-      }
+      where: { id: promptId, isActive: true },
     });
 
-    if (prompt && selectedAnswer.toLowerCase().trim() === prompt.correct_answer?.toLowerCase().trim()) {
-      return { isCorrect: true };
+    if (prompt && selectedAnswer.toLowerCase().trim() === prompt.correctAnswer?.toLowerCase().trim()) {
+      return { isCorrect: true, prompt: prompt };
     }
 
-    // Check if it's a player's fake answer
+    
     const playerResponse = await this.playerResponseRepository.findOne({
       where: {
         game: { id: gameId },
@@ -129,8 +128,8 @@ export class PlayerVoteValidator {
       relations: ['player'],
     });
 
-    if (playerResponse) {
-      return { isCorrect: false, playerResponse };
+    if (prompt && playerResponse) {
+      return { isCorrect: false, prompt: prompt, playerResponse };
     }
 
     throw new BadRequestException('Selected answer does not exist in this round');
@@ -165,5 +164,17 @@ export class PlayerVoteValidator {
     if (playerVote.player.id !== userId) {
       throw new ForbiddenException('User does not own this vote');
     }
+  }
+
+  async validatePromptExists(promptId: number): Promise<Prompt> {
+    const prompt = await this.promptRepository.findOne({
+      where: { id: promptId, isActive: true },
+    });
+
+    if (!prompt) {
+      throw new NotFoundException(`Prompt with ID ${promptId} not found`);
+    }
+
+    return prompt;
   }
 }

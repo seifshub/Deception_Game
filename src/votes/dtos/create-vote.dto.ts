@@ -11,7 +11,7 @@ export class CreatePlayerVoteDto {
 
   @Field(() => Int)
   @IsNumber()
-  questionId: number;
+  promptId: number;
 
   @Field(() => String)
   @IsString({ message: 'Selected answer must be a string' })

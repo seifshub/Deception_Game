@@ -1,12 +1,14 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AnswersService } from './responses.service';
-import { AnswersController } from './responses.controller';
+import { PlayerResponseService } from './responses.service';
+import { ResponsesController } from './responses.controller';
 import { PlayerResponse } from './entities/response.entity';
+import { PlayerResponseValidator } from './validators/response.validator';
 
 @Module({
   imports: [TypeOrmModule.forFeature([PlayerResponse])],
-  providers: [AnswersService],
-  controllers: [AnswersController]
+  providers: [PlayerResponseService, PlayerResponseValidator],
+  controllers: [ResponsesController],
+  exports: [PlayerResponseService, PlayerResponseValidator],
 })
-export class AnswersModule {}
+export class ResponsesModule {}

@@ -36,7 +36,7 @@ export class PlayerVote extends GenericEntity {
         nullable: true,
         comment: 'Whether they voted for correct answer or fake answer'
     })
-    vote_type: VoteType;
+    voteType: VoteType;
 
     @Field(() => String, { nullable: true, description: 'The answer text they voted for' })
     @Column({
@@ -44,7 +44,7 @@ export class PlayerVote extends GenericEntity {
         nullable: true,
         comment: 'The actual answer text they selected - null if no vote'
     })
-    selected_answer: string;
+    selectedAnswer: string;
 
     @Field(() => Date, { nullable: true, description: 'When the vote was cast' })
     @Column({
@@ -52,7 +52,7 @@ export class PlayerVote extends GenericEntity {
         nullable: true,
         comment: 'Timestamp when player cast their vote'
     })
-    voted_at: Date;
+    votedAt: Date;
 
     @Field(() => Number, { description: 'Points earned from this vote' })
     @Column({
@@ -80,5 +80,5 @@ export class PlayerVote extends GenericEntity {
     @Field(() => PlayerResponse, { nullable: true, description: 'The fake response voted for (if applicable)' })
     @ManyToOne(() => PlayerResponse, { nullable: true })
     @JoinColumn({ name: 'voted_response_id' })
-    voted_response: PlayerResponse;
+    votedResponse: PlayerResponse;
 }
