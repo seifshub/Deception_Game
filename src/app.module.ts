@@ -24,6 +24,8 @@ import { ValidationExceptionFilter } from './common/filters/validation-exception
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { AccessControlModule } from './access-control/access-control.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
@@ -54,11 +56,13 @@ import { AccessControlModule } from './access-control/access-control.module';
       },
       context: ({ req, res }) => ({ req, res }),
     }),
+    EventEmitterModule.forRoot(),
     CommonModule,
     ItemsModule,
     UsersModule,
     AuthModule,
     AccessControlModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [

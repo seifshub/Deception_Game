@@ -39,11 +39,31 @@ type User {
   createdAt: DateTime!
   updatedAt: DateTime!
   deletedAt: DateTime
+  notifications: [Notification!]
   email: String!
   username: String!
   role: Role!
   sentFriendRequests: [Friendship!]!
   receivedFriendRequests: [Friendship!]!
+}
+
+type Notification {
+  id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  deletedAt: DateTime
+  user: User!
+  title: String!
+  content: String!
+  type: NotificationTypeEnum!
+  isRead: Boolean!
+}
+
+"""The type of the notification"""
+enum NotificationTypeEnum {
+  FRIEND_REQUEST
+  FRIEND_REQUEST_ACCEPTED
+  LOBBY_INVITE
 }
 
 enum Role {
@@ -54,6 +74,7 @@ enum Role {
 type Query {
   Items: [Item!]!
   Item(id: ID!): Item!
+  myNotifications(page: Int! = 1, limit: Int! = 10): [Notification!]!
 }
 
 type Mutation {
