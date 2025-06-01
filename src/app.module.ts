@@ -23,6 +23,8 @@ import { GlobalExceptionFilter } from './common/filters/global-exception.filter'
 import { ValidationExceptionFilter } from './common/filters/validation-exception.filter';
 
 import { UsersModule } from './users/users.module';
+import { TopicsModule } from './topics/topics.module';
+import { PromptsModule } from './prompts/prompts.module';
 import { AuthModule } from './auth/auth.module';
 import { AccessControlModule } from './access-control/access-control.module';
 import { GamesModule } from './games/games.module';
@@ -62,6 +64,8 @@ import { GamesModule } from './games/games.module';
     CommonModule,
     ItemsModule,
     UsersModule,
+    TopicsModule,
+    PromptsModule,
     AuthModule,
     AccessControlModule,
     GamesModule,
