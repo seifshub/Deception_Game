@@ -99,6 +99,7 @@ type Query {
   Item(id: ID!): Item!
   Games: [Game!]!
   Game(id: ID!): Game!
+  getAvailableGames: [Game!]!
 }
 
 type Mutation {

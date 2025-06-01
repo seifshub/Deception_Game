@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Game } from './entities/game.entity';
 import { CreateGameInput } from './dto/create-game.input';
 import { UpdateGameInput } from './dto/update-game.input';
@@ -9,6 +9,7 @@ import { User } from '../users/entities/user.entity';
 import { GameState } from './enums/game.state.enum';
 import { GameValidator } from './validators/game.validator';
 import { Visibility } from './enums/game.visibilty.enum';
+import { FriendshipService } from 'src/users/friendship.service';
 
 @Injectable()
 export class GamesService extends GenericCrudService<
@@ -19,6 +20,7 @@ export class GamesService extends GenericCrudService<
   constructor(
     @InjectRepository(Game) private readonly gameRepository: Repository<Game>,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
+    private readonly friendshipService: FriendshipService,
     private readonly gameValidator: GameValidator,
   ) {
     super(gameRepository);
@@ -119,16 +121,36 @@ export class GamesService extends GenericCrudService<
     return this.gameRepository.save(game);
   }
 
-  async findAvailableGames(userId: number): Promise<Game[]> {
-    // This method would need custom repository queries, but would use the validator
-    // for any business logic validations
-    return this.gameRepository.find({
+async findAvailableGames(userId: number): Promise<Game[]> {
+    const publicGames = await this.gameRepository.find({
       where: {
         status: GameState.PREPARING,
         visibility: Visibility.PUBLIC,
       },
       relations: ['host', 'players'],
     });
+    
+    const user = await this.gameValidator.validateUserExists(userId);
+    const userFriends = await this.friendshipService.getFriends(userId);
+    const friendIds = userFriends.map(friend => friend.id);
+    
+    if (friendIds.length === 0) {
+      return publicGames; 
+    }
+    
+    // Get friends-only games where the host is a friend of the user
+    const friendsOnlyGames = await this.gameRepository.find({
+      where: {
+        status: GameState.PREPARING,
+        visibility: Visibility.FRIENDS_ONLY,
+        host: {
+          id: In(friendIds),
+        },
+      },
+      relations: ['host', 'players'],
+    });
+    
+    return [...publicGames, ...friendsOnlyGames];
   }
 
   // These methods provide convenience wrappers around validator functions

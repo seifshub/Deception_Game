@@ -68,6 +68,14 @@ export class GamesResolver extends GenericResolver(
     @ActiveUser() user: ActiveUserData,
   ): Promise<Game> {
     return this.gamesService.leaveGame(gameId, user.sub);
-    }
+  }
+
+  @Query(() => [Game])
+  async getAvailableGames(
+    @ActiveUser() user: ActiveUserData,
+  ): Promise<Game[]> {
+    return this.gamesService.findAvailableGames(user.sub);
+  }
+
 
 }
