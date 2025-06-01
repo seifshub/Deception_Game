@@ -10,6 +10,7 @@ import { GameValidator } from './validators/game.validator';
 import { GamesGateway } from './games.gateway';
 import { RoundsModule } from 'src/rounds/rounds.module';
 import { PromptsService } from 'src/prompts/prompts.service';
+import { TopicsService } from 'src/topics/topics.service';
 
 @Module({
   imports: [
@@ -17,7 +18,8 @@ import { PromptsService } from 'src/prompts/prompts.service';
     CommonModule,
     UsersModule,
     RoundsModule,
-    PromptsService
+    PromptsService,
+    TopicsService
   ],
   providers: [GamesResolver, GamesService, GameValidator, GamesGateway],
   exports: [GamesService],

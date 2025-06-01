@@ -18,7 +18,7 @@ import { WsActiveUser } from 'src/auth/decorators/ws-active-user.decorator';
 import { WebSocketExceptionFilter } from 'src/common/filters/websocket-exception.filter';
 import { REQUEST_USER_KEY } from 'src/auth/decorators/keys';
 import { GameValidator } from './validators/game.validator';
-import { error } from 'console';
+import { TopicsService } from 'src/topics/topics.service';
 
 @UseFilters(WebSocketExceptionFilter)
 @WebSocketGateway({
@@ -39,7 +39,8 @@ export class GamesGateway
     server: Server;
 
     constructor(private readonly gamesService: GamesService,
-        private readonly gameValidator : GameValidator
+        private readonly gameValidator : GameValidator,
+        private readonly topicService: TopicsService
     ) {}
 
     async handleConnection(client: Socket) {
@@ -166,10 +167,26 @@ export class GamesGateway
             this.broadcastGameUpdate(gameId,"gameStarted", updatedGame);
             this.logger.log(`User ${user.username} started game ${gameId}`);
 
+            // TODO: wrap this logic into a helper function later on (since it repeates each round)
             const randomPlayer = updatedGame.players[Math.floor(Math.random() * updatedGame.players.length)];
-
-            // TODO: send topic to the random player
+            const randomPlayerSocket = this.retrievePlayerSocket(randomPlayer.id);
             
+            const topics = await this.topicService.getRandomTopics(5);
+
+            // Notify the chosen player to choose a topic
+            randomPlayerSocket.emit('chooseTopic', {
+                topics: topics,
+            });
+
+            this.broadcastGameUpdateExcludingOne(
+                gameId,
+                'PlayerIsChoosingTopic',
+                {
+                    playerId: randomPlayer.id,
+                    username: randomPlayer.username,
+                },
+                randomPlayer.id,
+            );
 
             return { success: true };
 
@@ -180,10 +197,33 @@ export class GamesGateway
         }
     }
 
-    //helper function to broadcast game updates
+    
+
+    //helper functions to broadcast game updates
+
+    retrievePlayerSocket(userId: number): Socket {
+        const socket = this.gamers.get(userId);
+        if (!socket) {
+            this.logger.warn(`No socket found for user ${userId}`);
+            throw new WsException(`No socket found for player`);
+        }
+        return socket;
+    }
+
     broadcastGameUpdate(gameId: number,event: string, data: any) {
         const roomName = `game:${gameId}`;
         this.server.to(roomName).emit(event, data);
+    }
+
+    broadcastGameUpdateExcludingOne(
+        gameId: number,
+        event: string,
+        data: any,
+        excludeUserId: number,
+    ) {
+        const roomName = `game:${gameId}`;
+        const excludedUserSocket = this.retrievePlayerSocket(excludeUserId);
+        excludedUserSocket.to(roomName).emit(event, data);
     }
 
 
