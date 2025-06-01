@@ -31,7 +31,6 @@ export class GamesService extends GenericCrudService<
     
     const game = this.gameRepository.create({
       ...createGameInput,
-      current_size: 1,
       host,
       players: [host],
     });
@@ -49,7 +48,6 @@ export class GamesService extends GenericCrudService<
     await this.gameValidator.validateGameVisibility(game, userId);
 
     game.players.push(user);
-    game.current_size += 1;
     
     return this.gameRepository.save(game);
   }
@@ -116,7 +114,6 @@ export class GamesService extends GenericCrudService<
     // Remove player
     const playerIndex = game.players.findIndex(player => player.id === userId);
     game.players.splice(playerIndex, 1);
-    game.current_size -= 1;
     
     return this.gameRepository.save(game);
   }

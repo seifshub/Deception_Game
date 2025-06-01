@@ -43,9 +43,6 @@ export class Game extends GenericEntity {
         comment: 'The number of players required to start the game'
     })
     size: number;
-    
-    @Column()
-    current_size: number;
 
     @Field(() => User, { description: 'The host of the game' })
     @ManyToOne(() => User, user => user.hostedGames, { eager: true })

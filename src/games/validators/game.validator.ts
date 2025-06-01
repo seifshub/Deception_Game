@@ -77,7 +77,7 @@ export class GameValidator {
   }
 
   validateGameHasCapacity(game: Game): void {
-    if (game.current_size >= game.size) {
+    if (game.players.length >= game.size) {
       throw new ForbiddenException(`Game with id ${game.id} is full`);
     }
   }
@@ -110,7 +110,7 @@ export class GameValidator {
   }
 
   validateMinimumPlayers(game: Game, minPlayers: number = 2): void {
-    if (game.current_size < minPlayers) {
+    if (game.players.length < minPlayers) {
       throw new ForbiddenException(
         `Cannot start a game with fewer than ${minPlayers} players`,
       );
