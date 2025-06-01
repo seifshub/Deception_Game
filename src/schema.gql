@@ -50,13 +50,13 @@ type Game {
   players: [User!]!
   name: String!
   size: Int!
-  current_size: Int!
 }
 
 enum GameState {
   PREPARING
   IN_PROGRESS
   ABORTED
+  FINAL_RESULTS
   FINISHED
 }
 
@@ -128,7 +128,7 @@ type Mutation {
   updateItem(id: ID!, updateItemInput: UpdateItemInput!): Item!
   removeItem(id: ID!): Boolean!
   createGame(createGameInput: CreateGameInput!): Game!
-  updateGame(gameId: ID!, updateGameInput: UpdateGameInput!): Game!
+  updateGame(id: ID!, updateGameInput: UpdateGameInput!): Game!
   removeGame(id: ID!): Boolean!
   create(createInput: CreateGameInput!): Game!
   joinGame(gameId: ID!): Game!
