@@ -18,6 +18,7 @@ import { WsActiveUser } from 'src/auth/decorators/ws-active-user.decorator';
 import { WebSocketExceptionFilter } from 'src/common/filters/websocket-exception.filter';
 import { REQUEST_USER_KEY } from 'src/auth/decorators/keys';
 import { GameValidator } from './validators/game.validator';
+import { error } from 'console';
 
 @UseFilters(WebSocketExceptionFilter)
 @WebSocketGateway({
@@ -82,17 +83,19 @@ export class GamesGateway
         @WsActiveUser() user: ActiveUserData,
     ) {
         const roomName = `game:${gameId}`;
-        
-        const game = await this.gamesService.verifyGameExists(gameId);
-        
-        this.gameValidator.validateUserIsPlayer(game, user.sub)
+        try{
+            const game = await this.gamesService.verifyGameExists(gameId);
+            this.gameValidator.validateUserIsPlayer(game, user.sub)}
+        catch (error) {
+            this.logger.error(`User ${user.username} failed to join room ${roomName}: ${error.message}`);
+            throw new WsException(`Failed to join game room: ${error.message}`);
+        }
         
         client.join(roomName);
         this.logger.log(`User ${user.username} joined room ${roomName}`);
         
-        // Notify other users in the room
+        // Notify other users in the room 
         client.to(roomName).emit('playerJoined', {
-        userId: user.sub,
         username: user.username
         });
         
@@ -108,6 +111,14 @@ export class GamesGateway
     ) {
         const roomName = `game:${gameId}`;
         client.leave(roomName);
+
+        try{
+            const game = await this.gamesService.verifyGameExists(gameId);
+            this.gameValidator.validateUserIsPlayer(game, user.sub)}
+        catch (error) {
+            this.logger.error(`User ${user.username} failed to leave room ${roomName}: ${error.message}`);
+            throw new WsException(`Failed to leave game room: ${error.message}`);
+        }
         
         // Notify other users in the room
         client.to(roomName).emit('playerLeft', {
@@ -143,9 +154,36 @@ export class GamesGateway
         return { success: true };
     }
 
-    //helper function to broadcast game updates
-    broadcastGameUpdate(gameId: number, data: any) {
-        const roomName = `game:${gameId}`;
-        this.server.to(roomName).emit('gameUpdated', data);
+    @UseGuards(WsSessionGuard)
+    @SubscribeMessage('startGame')
+    async handleStartGame(
+        @ConnectedSocket() client: Socket,
+        @MessageBody() gameId: number,
+        @WsActiveUser() user: ActiveUserData,
+    ) {
+        try{
+            const updatedGame = await this.gamesService.startGame(gameId, user.sub);
+            this.broadcastGameUpdate(gameId,"gameStarted", updatedGame);
+            this.logger.log(`User ${user.username} started game ${gameId}`);
+
+            const randomPlayer = updatedGame.players[Math.floor(Math.random() * updatedGame.players.length)];
+
+            // TODO: send topic to the random player
+
+            return { success: true };
+
+        }
+        catch (error){
+            this.logger.error(`User ${user.username} failed to start game ${gameId}: ${error.message}`);
+            throw new WsException(`Failed to start game: ${error.message}`);
+        }
     }
+
+    //helper function to broadcast game updates
+    broadcastGameUpdate(gameId: number,event: string, data: any) {
+        const roomName = `game:${gameId}`;
+        this.server.to(roomName).emit(event, data);
+    }
+
+
 }

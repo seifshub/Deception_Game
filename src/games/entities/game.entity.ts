@@ -1,6 +1,6 @@
 import { ObjectType, Field, registerEnumType } from '@nestjs/graphql';
 import { GenericEntity } from '../../common/entities/generic.entity';
-import { Column, Entity, ManyToOne, ManyToMany, JoinTable, JoinColumn, Unique } from 'typeorm';
+import { Column, Entity, ManyToOne, ManyToMany, JoinTable, JoinColumn, Unique, Collection } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { GameState } from '../enums/game.state.enum';
 import { GameSubstate } from '../enums/game.substate.enum';
@@ -43,6 +43,16 @@ export class Game extends GenericEntity {
         comment: 'The number of players required to start the game'
     })
     size: number;
+
+    @Column({
+        default: 3
+    })
+    rounds: number;
+
+    @Column({
+        default: 0,
+    })
+    currentRound: number;
 
     @Field(() => User, { description: 'The host of the game' })
     @ManyToOne(() => User, user => user.hostedGames, { eager: true })

@@ -10,6 +10,7 @@ import { GameState } from './enums/game.state.enum';
 import { GameValidator } from './validators/game.validator';
 import { Visibility } from './enums/game.visibilty.enum';
 import { FriendshipService } from 'src/users/friendship.service';
+import { GameSubstate } from './enums/game.substate.enum';
 
 @Injectable()
 export class GamesService extends GenericCrudService<
@@ -74,7 +75,10 @@ export class GamesService extends GenericCrudService<
     this.gameValidator.validateGameState(game, GameState.PREPARING);
     this.gameValidator.validateMinimumPlayers(game, 2);
     
+    
     game.status = GameState.IN_PROGRESS;
+    game.substate = GameSubstate.CHOOSING_TOPIC; 
+    game.currentRound = 1; 
     
     return this.gameRepository.save(game);
   }

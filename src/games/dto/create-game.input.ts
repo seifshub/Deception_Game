@@ -18,4 +18,10 @@ export class CreateGameInput {
     @IsOptional()
     @IsEnum(Visibility)
     visibility?: Visibility;
+
+    @Field({ nullable: true })
+    @IsOptional()
+    @IsInt()
+    @Min(1)
+    rounds?: number;
 }
