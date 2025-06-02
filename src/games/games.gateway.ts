@@ -20,6 +20,8 @@ import { REQUEST_USER_KEY } from 'src/auth/decorators/keys';
 import { GameValidator } from './validators/game.validator';
 import { TopicsService } from 'src/topics/topics.service';
 import { Game } from './entities/game.entity';
+import { CreateAnswerDto } from 'src/answers/dtos/create-answer.dto';
+import { GameSubstate } from './enums/game.substate.enum';
 
 @UseFilters(WebSocketExceptionFilter)
 @WebSocketGateway({
@@ -192,7 +194,7 @@ export class GamesGateway
 
             this.logger.log(`User ${user.username} chose topic ${topicId} for game ${gameId}`);
 
-            const currentRound = game.gameRounds[game.gameRounds.length - 1];
+            const currentRound = await this.gamesService.retrieveCurrentRound(game);
             const currentPrompt = currentRound.prompt;
 
             this.broadcastGameUpdate(gameId, 'answerPrompt', 
@@ -205,6 +207,64 @@ export class GamesGateway
         catch (error) {
             this.logger.error(`User ${user.username} failed to choose topic for game ${payload.gameId}: ${error.message}`);
             throw new WsException(`Failed to choose topic: ${error.message}`);
+        }
+    }
+
+    @UseGuards(WsSessionGuard)
+    @SubscribeMessage('submitAnswer')
+    async handleSubmitAnswer(
+        @ConnectedSocket() client: Socket,
+        @MessageBody() payload: { gameId: number, createAnswerDto: CreateAnswerDto},
+        @WsActiveUser() user: ActiveUserData,
+    ) {
+        const { gameId, createAnswerDto } = payload;
+
+        try {
+            const game = await this.gamesService.verifyGameExists(gameId);
+            this.gameValidator.validateUserIsPlayer(game, user.sub);
+
+            const currentRound = await this.gamesService.retrieveCurrentRound(game);
+            // don't allow user to guess the correct answer
+            if(createAnswerDto.content === currentRound.prompt.correctAnswer) {
+                const playerSocket = this.retrievePlayerSocket(user.sub);
+                playerSocket.emit('answerCorrectChangeIt', {
+                    message: 'You guessed the correct answer! Please change it to something else.',
+                });
+                return { success: false};
+            }
+
+            await this.gamesService.submitAnswer(user.sub, createAnswerDto, currentRound);
+            this.logger.log(`User ${user.username} submitted answer for game ${gameId}`);
+
+            this.broadcastGameUpdate(gameId, 'answerSubmitted', {
+                userId: user.sub,
+                username: user.username,
+            });
+
+            const updatedGame = await this.gamesService.verifyGameExists(gameId);
+
+            //get answers for the current round
+            const currentRoundAnswers = updatedGame.playerProfiles.flatMap(player => 
+                player.answers.filter(answer => answer.round.id === currentRound.id)
+            );
+            
+            if (currentRoundAnswers.length === updatedGame.playerProfiles.length) {
+                this.logger.log(`All players have submitted answers for game ${gameId}`);
+                this.broadcastGameUpdate(gameId, 'allAnswersSubmitted', {
+                    roundId: currentRound.id,
+                    answers: currentRoundAnswers.map(answer => ({
+                        answerId : answer.id,
+                        content: answer.content,
+                    })),
+                });
+
+                this.gamesService.switchSubstate(gameId, GameSubstate.GIVING_ANSWER, GameSubstate.VOTING);  
+            }
+
+            return { success: true };
+        } catch (error) {
+            this.logger.error(`User ${user.username} failed to submit answer for game ${gameId}: ${error.message}`);
+            throw new WsException(`Failed to submit answer: ${error.message}`);
         }
     }
 

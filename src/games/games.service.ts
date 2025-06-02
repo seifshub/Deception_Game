@@ -15,6 +15,8 @@ import { ForbiddenError } from '@nestjs/apollo';
 import { RoundsService } from 'src/rounds/rounds.service';
 import { PromptsService } from 'src/prompts/prompts.service';
 import { PlayersService } from 'src/players/players.service';
+import { Round } from 'src/rounds/entities/round.entity';
+import { CreateAnswerDto } from 'src/answers/dtos/create-answer.dto';
 
 @Injectable()
 export class GamesService extends GenericCrudService<
@@ -199,6 +201,36 @@ async findAvailableGames(userId: number): Promise<Game[]> {
     game.substate = GameSubstate.GIVING_ANSWER; // Set substate to giving answer
 
     return this.gameRepository.save(game);
+  }
+
+  async retrieveCurrentRound(game : Game): Promise<Round> {
+
+    // This method retrieves the current round of the game, if any
+    if (!game || !game.gameRounds || game.gameRounds.length === 0) {
+      throw new ForbiddenError(`Game with ID ${game.id} has no rounds.`);
+    }
+
+    const currentRound = game.gameRounds[game.gameRounds.length - 1];
+
+    if (!currentRound) {
+      throw new ForbiddenError(`No current round found for game with ID ${game.id}.`);
+    }
+
+    return currentRound;
+  }
+
+  async submitAnswer(playerId : number, createAnswerDto: CreateAnswerDto, round : Round ): Promise<void> {
+    this.playersService.addAnswerToPlayer(playerId, createAnswerDto, round);
+  }
+
+  async switchSubstate(gameId: number,currentSubState ,newSubstate: GameSubstate): Promise<Game> {
+    const game = await this.gameValidator.validateGameExists(gameId);
+    
+    this.gameValidator.validateGameState(game, currentSubState);
+
+    game.substate = newSubstate;
+
+    return this.update(gameId, game);
   }
 
   // These methods provide convenience wrappers around validator functions
