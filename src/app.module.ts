@@ -21,15 +21,19 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { APP_FILTER } from '@nestjs/core';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { ValidationExceptionFilter } from './common/filters/validation-exception.filter';
-
+import { AccessControlModule } from './auth/access-control/access-control.module';
 import { UsersModule } from './users/users.module';
 import { TopicsModule } from './topics/topics.module';
 import { PromptsModule } from './prompts/prompts.module';
 import { AuthModule } from './auth/auth.module';
-import { AccessControlModule } from './access-control/access-control.module';
 import { GamesModule } from './games/games.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { RoundsModule } from './rounds/rounds.module';
+import { Player } from './players/entities/player.entity';
+import { PlayersModule } from './players/players.module';
+import { AnswersModule } from './answers/answers.module';
+import { VotesModule } from './votes/votes.module';
 
 @Module({
   imports: [
@@ -73,6 +77,10 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     AccessControlModule,
     NotificationsModule,
     GamesModule,
+    RoundsModule,
+    PlayersModule,
+    AnswersModule,
+    VotesModule,
   ],
   controllers: [AppController],
   providers: [

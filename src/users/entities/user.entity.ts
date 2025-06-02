@@ -6,6 +6,7 @@ import { Notification } from '../../notifications/entities/notification.entity';
 import { Column, Entity, ManyToMany, OneToMany, Unique } from 'typeorm';
 import { Field, HideField, ObjectType } from '@nestjs/graphql';
 import { GenericEntity } from '../../common/entities/generic.entity';
+import { Player } from 'src/players/entities/player.entity';
 
 @Entity()
 @ObjectType()
@@ -38,6 +39,7 @@ export class User extends GenericEntity {
   @OneToMany(() => Game, (game) => game.host)
   hostedGames: Game[];
 
-  @ManyToMany(() => Game, (game) => game.players)
-  joinedGames: Game[];
+  @OneToMany(() => Player, player => player.user) 
+  playerProfiles: Player[];
+  
 }
