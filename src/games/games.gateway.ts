@@ -78,10 +78,24 @@ export class GamesGateway implements OnGatewayConnection, OnGatewayDisconnect {
       );
       return;
     }
-    this.gamesService.leaveGame(game.id, user.sub);
-    // TODO: make it so that if the game is aborted all players are notified / disconnected
+    const updatedGame = await this.gamesService.leaveGame(game.id, user.sub);
+
     this.gamers.delete(user.sub);
     this.logger.log(`Client disconnected: ${client.id}`);
+
+    if(updatedGame.status === GameState.ABORTED) {
+      this.logger.log(
+        `Game ${updatedGame.id} was aborted. Notifying players.`,
+      );
+      this.broadcastGameUpdate(updatedGame.id, 'gameAborted', {
+        message: 'The game has been aborted.',
+      });
+      // disconnect all players from the game room
+      const roomName = `game:${updatedGame.id}`;
+      this.server.to(roomName).socketsLeave(roomName);
+      this.logger.log(`All players disconnected from room ${roomName}`);
+      return;
+    }
   }
 
   @UseGuards(WsSessionGuard)
@@ -358,9 +372,8 @@ export class GamesGateway implements OnGatewayConnection, OnGatewayDisconnect {
         // update user scores based on votes and answers
         const playerProfiles = updatedGame.playerProfiles;
         for (const playerProfile of playerProfiles) {
-          const player = playerProfile.user;
           const answer = playerProfile.answers.filter(
-            (answer) => answer.round.roundNumber === currentRound.id,
+            (answer) => answer.round.roundNumber === currentRound.roundNumber,
           )[0];
           const vote = playerProfile.votes.filter(
             (vote) => vote.roundNumber === currentRound.roundNumber,
@@ -380,7 +393,7 @@ export class GamesGateway implements OnGatewayConnection, OnGatewayDisconnect {
           }
 
           // Update player's score
-          await this.gamesService.addScoreToPlayer(player.id, scoreToAdd);
+          await this.gamesService.addScoreToPlayer(playerProfile.id, scoreToAdd);
         }
 
         const finalUpdatedGame =
@@ -444,13 +457,8 @@ export class GamesGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       // disconnect all players from the game room
       const roomName = `game:${gameId}`;
-      this.gamers.forEach((socket, userId) => {
-        if (socket.rooms.has(roomName)) {
-          socket.leave(roomName);
-          this.logger.log(`User ${userId} left room ${roomName}`);
-        }
-      });
       this.server.to(roomName).socketsLeave(roomName);
+      
       this.logger.log(`All players disconnected from room ${roomName}`);
 
       return { success: true };
@@ -486,7 +494,10 @@ export class GamesGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {
     const roomName = `game:${gameId}`;
     const excludedUserSocket = this.retrievePlayerSocket(excludeUserId);
-    excludedUserSocket.to(roomName).emit(event, data);
+    this.server.to(roomName).except(excludedUserSocket.id).emit(event, data);
+    this.logger.log(
+      `Broadcasting event ${event} to room ${roomName} excluding user ${excludeUserId}`,
+    );
   }
 
   async choseTopic(game: Game): Promise<void> {
@@ -517,7 +528,7 @@ export class GamesGateway implements OnGatewayConnection, OnGatewayDisconnect {
         playerId: randomPlayer.user.id,
         username: randomPlayer.user.username,
       },
-      randomPlayer.id,
+      randomPlayer.user.id,
     );
   }
 }
