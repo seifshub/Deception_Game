@@ -6,6 +6,9 @@ import { GameState } from '../enums/game.state.enum';
 import { GameSubstate } from '../enums/game.substate.enum';
 import { Visibility } from '../enums/game.visibilty.enum';
 import { Round } from '../../rounds/entities/round.entity';
+import { PlayerResponse } from '../../responses/entities/response.entity';
+import { PlayerVote } from '../../votes/entities/votes.entity';
+import { UQ_GAME_NAME } from '../games.constants';
 
 
 @ObjectType()
@@ -67,5 +70,11 @@ export class Game extends GenericEntity {
     @OneToMany(() => Round, round => round.game, { eager:true, cascade: true })
     @JoinColumn({ name: 'game_id' })
     gameRounds: Round[];
+
+    @OneToMany(() => PlayerResponse, response => response.game)
+    playerResponses: PlayerResponse[];
+
+    @OneToMany(() => PlayerVote, vote => vote.game)
+    playerVotes: PlayerVote[];
 
 }

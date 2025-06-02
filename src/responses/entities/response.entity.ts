@@ -7,6 +7,7 @@ import { ResponseStatus } from '../enums';
 import { Game } from '../../games/entities/game.entity';
 import { PlayerVote } from '../../votes/entities/votes.entity';
 import { UQ_PLAYER_RESPONSE_UNIQUE } from '../responses.constants';
+import { Round } from '../../rounds/entities/round.entity';
 
 @ObjectType()
 @Entity()
@@ -20,12 +21,6 @@ export class PlayerResponse extends GenericEntity {
         comment: 'the fake answer. null if timed out'
     })
     response: string;
-
-    @Column({
-        type: 'int',
-        comment: 'The round number this response belongs to'
-    })
-    round: number;
 
     @Field(() => ResponseStatus)
     @Column({
@@ -66,4 +61,9 @@ export class PlayerResponse extends GenericEntity {
 
     @OneToMany(() => PlayerVote, vote => vote.votedResponse)
     votes: PlayerVote[];
+
+    @Field(() => Round, { description: 'The round this response belongs to' })
+    @ManyToOne(() => Round, round => round.playerResponses, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'round_id' })
+    round: Round;
 }

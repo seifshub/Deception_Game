@@ -7,18 +7,13 @@ import { Prompt } from '../../prompts/entities/prompt.entity';
 import { PlayerResponse } from '../../responses/entities/response.entity';
 import { VoteStatus, VoteType } from '../enums';
 import { UQ_PLAYER_VOTE_UNIQUE } from '../votes.constants';
+import { Round } from '../../rounds/entities/round.entity';
 
 @ObjectType()
 @Entity()
 @Unique(UQ_PLAYER_VOTE_UNIQUE, ['game', 'round', 'player'])
-@Index(['game', 'round']) 
+@Index(['game', 'round'])
 export class PlayerVote extends GenericEntity {
-    @Field(() => Number, { description: 'Current round number' })
-    @Column({
-        type: 'int',
-        comment: 'The round number this vote belongs to'
-    })
-    round: number;
 
     @Field(() => VoteStatus, { description: 'Status of the vote' })
     @Column({
@@ -81,4 +76,9 @@ export class PlayerVote extends GenericEntity {
     @ManyToOne(() => PlayerResponse, { nullable: true })
     @JoinColumn({ name: 'voted_response_id' })
     votedResponse: PlayerResponse;
+
+    @Field(() => Round, { description: 'The round this vote belongs to' })
+    @ManyToOne(() => Round, round => round.playerVotes, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'round_id' })
+    round: Round;
 }

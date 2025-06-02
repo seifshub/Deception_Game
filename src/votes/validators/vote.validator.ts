@@ -7,8 +7,9 @@ import { Game } from '../../games/entities/game.entity';
 import { User } from '../../users/entities/user.entity';
 import { Prompt } from '../../prompts/entities/prompt.entity';
 import { Repository } from 'typeorm';
-import { GameState, GameSubstate} from '../../games/enums'
+import { GameState, GameSubstate } from '../../games/enums'
 import { ResponseStatus } from '../../responses/enums'
+import { Round } from '../../rounds/entities/round.entity';
 
 @Injectable()
 export class PlayerVoteValidator {
@@ -23,7 +24,9 @@ export class PlayerVoteValidator {
     private readonly userRepository: Repository<User>,
     @InjectRepository(Prompt)
     private readonly promptRepository: Repository<Prompt>,
-  ) {}
+    @InjectRepository(Round)
+    private readonly roundRepository: Repository<Round>,
+  ) { }
 
   async validatePlayerVoteExists(voteId: number): Promise<PlayerVote> {
     const vote = await this.playerVoteRepository.findOne({
@@ -66,18 +69,26 @@ export class PlayerVoteValidator {
     }
   }
 
+  async validateRoundExists(roundId: number): Promise<Round> {
+    const round = await this.roundRepository.findOne({ where: { id: roundId } });
+    if (!round) {
+      throw new NotFoundException('Round not found');
+    }
+    return round;
+  }
+
   validateGameInVotingPhase(game: Game): void {
     if (game.status !== GameState.IN_PROGRESS || game.substate !== GameSubstate.VOTING) {
       throw new BadRequestException('Game is not in voting phase');
     }
   }
 
-  async validatePlayerEligibleToVote(gameId: number, userId: number, round: number): Promise<void> {
+  async validatePlayerEligibleToVote(gameId: number, userId: number, roundId: number): Promise<void> {
     const playerResponse = await this.playerResponseRepository.findOne({
       where: {
         game: { id: gameId },
         player: { id: userId },
-        round,
+        round: { id: roundId },
       },
     });
 
@@ -86,12 +97,12 @@ export class PlayerVoteValidator {
     }
   }
 
-  async validateNoDuplicateVote(gameId: number, userId: number, round: number): Promise<void> {
+  async validateNoDuplicateVote(gameId: number, userId: number, roundId: number): Promise<void> {
     const existingVote = await this.playerVoteRepository.findOne({
       where: {
         game: { id: gameId },
         player: { id: userId },
-        round,
+        round: { id: roundId },
       },
     });
 
@@ -107,8 +118,8 @@ export class PlayerVoteValidator {
     }
   }
 
-  async validateAnswerExists(gameId: number, round: number, promptId: number, selectedAnswer: string): Promise<{ isCorrect: boolean; prompt: Prompt; playerResponse?: PlayerResponse }> {
-    
+  async validateAnswerExists(gameId: number, roundId: number, promptId: number, selectedAnswer: string): Promise<{ isCorrect: boolean; prompt: Prompt; playerResponse?: PlayerResponse }> {
+
     const prompt = await this.promptRepository.findOne({
       where: { id: promptId, isActive: true },
     });
@@ -117,11 +128,11 @@ export class PlayerVoteValidator {
       return { isCorrect: true, prompt: prompt };
     }
 
-    
+
     const playerResponse = await this.playerResponseRepository.findOne({
       where: {
         game: { id: gameId },
-        round,
+        round: { id: roundId },
         response: selectedAnswer,
         status: ResponseStatus.SUBMITTED,
       },
@@ -135,12 +146,12 @@ export class PlayerVoteValidator {
     throw new BadRequestException('Selected answer does not exist in this round');
   }
 
-  async validateNotVotingForOwnAnswer(gameId: number, userId: number, round: number, selectedAnswer: string): Promise<void> {
+  async validateNotVotingForOwnAnswer(gameId: number, userId: number, roundId: number, selectedAnswer: string): Promise<void> {
     const playerResponse = await this.playerResponseRepository.findOne({
       where: {
         game: { id: gameId },
         player: { id: userId },
-        round,
+        round: { id: roundId },
         response: selectedAnswer,
       },
     });

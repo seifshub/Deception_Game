@@ -22,5 +22,5 @@ export class CreatePlayerResponseDto {
 
   @Field(() => Int)
   @IsNumber()
-  round: number;
+  roundId: number;
 }

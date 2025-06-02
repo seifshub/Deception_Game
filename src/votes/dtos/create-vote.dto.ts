@@ -21,5 +21,5 @@ export class CreatePlayerVoteDto {
 
   @Field(() => Int)
   @IsNumber({}, { message: 'Round must be a number' })
-  round: number;
+  roundId: number;
 }

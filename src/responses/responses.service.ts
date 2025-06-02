@@ -15,25 +15,26 @@ export class PlayerResponseService {
   ) {}
 
   async createResponse(createDto: CreatePlayerResponseDto, userId: number): Promise<PlayerResponse> {
-    const { gameId, promptId, response, round } = createDto;
+    const { gameId, promptId, response, roundId } = createDto;
 
     // Validations
     const game = await this.playerResponseValidator.validateGameExists(gameId);
     const user = await this.playerResponseValidator.validateUserExists(userId);
     const prompt = await this.playerResponseValidator.validatePromptExists(promptId);
+    const round = await this.playerResponseValidator.validateRoundExists(roundId);
 
     this.playerResponseValidator.validateUserIsPlayer(game, userId);
     this.playerResponseValidator.validateGameInResponsePhase(game);
     this.playerResponseValidator.validateResponseLength(response);
-    await this.playerResponseValidator.validateNoDuplicateResponse(gameId, userId, round);
+    await this.playerResponseValidator.validateNoDuplicateResponse(gameId, userId, roundId);
 
     const playerResponse = this.playerResponseRepository.create({
       response,
-      round,
       status: ResponseStatus.DRAFT,
       player: user,
       game: game,
       prompt: prompt,
+      round: round,
     });
 
     return this.playerResponseRepository.save(playerResponse);
@@ -63,30 +64,30 @@ export class PlayerResponseService {
     return this.playerResponseRepository.save(playerResponse);
   }
 
-  async getResponsesByGameAndRound(gameId: number, round: number): Promise<PlayerResponse[]> {
+  async getResponsesByGameAndRound(gameId: number, roundId: number): Promise<PlayerResponse[]> {
     return this.playerResponseRepository.find({
       where: {
         game: { id: gameId },
-        round,
+        round: { id: roundId },
         status: ResponseStatus.SUBMITTED,
       },
       relations: ['player'],
     });
   }
 
-  async getPlayerResponse(gameId: number, userId: number, round: number): Promise<PlayerResponse | null> {
+  async getPlayerResponse(gameId: number, userId: number, roundId: number): Promise<PlayerResponse | null> {
     return this.playerResponseRepository.findOne({
       where: {
         game: { id: gameId },
         player: { id: userId },
-        round,
+        round: { id: roundId },
       },
       relations: ['player', 'game', 'prompt'],
     });
   }
 
-  async markResponseAsTimedOut(gameId: number, userId: number, round: number): Promise<PlayerResponse | null> {
-    const response = await this.getPlayerResponse(gameId, userId, round);
+  async markResponseAsTimedOut(gameId: number, userId: number, roundId: number): Promise<PlayerResponse | null> {
+    const response = await this.getPlayerResponse(gameId, userId, roundId);
     
     if (response && response.status === ResponseStatus.DRAFT) {
       response.status = ResponseStatus.TIMED_OUT;
@@ -102,11 +103,11 @@ export class PlayerResponseService {
     return this.playerResponseRepository.save(response);
   }
 
-  async getSubmittedResponsesCount(gameId: number, round: number): Promise<number> {
+  async getSubmittedResponsesCount(gameId: number, roundId: number): Promise<number> {
     return this.playerResponseRepository.count({
       where: {
         game: { id: gameId },
-        round,
+        round: { id: roundId },
         status: ResponseStatus.SUBMITTED,
       },
     });

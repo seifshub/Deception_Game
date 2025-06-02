@@ -7,6 +7,7 @@ import { Game } from '../../games/entities/game.entity';
 import { User } from '../../users/entities/user.entity';
 import { Prompt } from '../../prompts/entities/prompt.entity';
 import { GameState, GameSubstate } from '../../games/enums';
+import { Round } from '../../rounds/entities/round.entity';
 
 @Injectable()
 export class PlayerResponseValidator {
@@ -19,6 +20,8 @@ export class PlayerResponseValidator {
     private readonly userRepository: Repository<User>,
     @InjectRepository(Prompt)
     private readonly promptRepository: Repository<Prompt>,
+    @InjectRepository(Round)
+    private readonly roundRepository: Repository<Round>,
   ) {}
 
   async validatePlayerResponseExists(responseId: number): Promise<PlayerResponse> {
@@ -63,6 +66,14 @@ export class PlayerResponseValidator {
     return prompt;
   }
 
+  async validateRoundExists(roundId: number): Promise<Round> {
+    const round = await this.roundRepository.findOne({ where: { id: roundId } });
+    if (!round) {
+      throw new NotFoundException(`Round with ID ${roundId} not found`);
+    }
+    return round;
+  }
+
   validateUserIsPlayer(game: Game, userId: number): void {
     const isPlayer = game.players.some(player => player.id === userId);
     if (!isPlayer) {
@@ -86,12 +97,12 @@ export class PlayerResponseValidator {
     }
   }
 
-  async validateNoDuplicateResponse(gameId: number, userId: number, round: number): Promise<void> {
+  async validateNoDuplicateResponse(gameId: number, userId: number, roundId: number): Promise<void> {
     const existingResponse = await this.playerResponseRepository.findOne({
       where: {
         game: { id: gameId },
         player: { id: userId },
-        round,
+        round: { id: roundId},
       },
     });
 
