@@ -9,7 +9,6 @@ import { ActiveUser } from '../auth/decorators/active-user.decorator';
 import { ActiveUserData } from '../auth/interfaces/active-user-data.interface';
 import { SessionGuard } from '../auth/guards/session.guard';
 
-@UseGuards(SessionGuard)
 @Resolver(() => Game)
 export class GamesResolver extends GenericResolver(
   Game as Type<Game> & Game,
@@ -59,6 +58,5 @@ export class GamesResolver extends GenericResolver(
   ): Promise<Game[]> {
     return this.gamesService.findAvailableGames(user.sub);
   }
-
 
 }

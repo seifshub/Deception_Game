@@ -21,6 +21,7 @@ import { ItemsModule } from './items/items.module';
 import { LoggerMiddleware } from './common/middlewares/logger.middleware';
 import { APP_FILTER } from '@nestjs/core';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
+import { ValidationExceptionFilter } from './common/filters/validation-exception.filter';
 
 import { UsersModule } from './users/users.module';
 import { TopicsModule } from './topics/topics.module';
@@ -30,6 +31,11 @@ import { AccessControlModule } from './access-control/access-control.module';
 import { GamesModule } from './games/games.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { RoundsModule } from './rounds/rounds.module';
+import { Player } from './players/entities/player.entity';
+import { PlayersModule } from './players/players.module';
+import { AnswersModule } from './answers/answers.module';
+import { VotesModule } from './votes/votes.module';
 import { StripeModule } from './stripe/stripe.module';
 import { PaymentModule } from './payment/payment.module';
 
@@ -79,6 +85,10 @@ import * as bodyParser from 'body-parser';
     GamesModule,
     StripeModule,
     PaymentModule,
+    RoundsModule,
+    PlayersModule,
+    AnswersModule,
+    VotesModule,
   ],
   controllers: [AppController],
   providers: [
@@ -87,10 +97,10 @@ import * as bodyParser from 'body-parser';
       provide: APP_FILTER,
       useClass: GlobalExceptionFilter,
     },
-    // {
-    //   provide: APP_FILTER,
-    //   useClass: ValidationExceptionFilter,
-    // },
+    {
+      provide: APP_FILTER,
+      useClass: ValidationExceptionFilter,
+    },
   ],
 })
 export class AppModule implements NestModule {

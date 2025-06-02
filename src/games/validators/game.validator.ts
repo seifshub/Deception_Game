@@ -6,6 +6,7 @@ import { User } from '../../users/entities/user.entity';
 import { GameState } from '../enums/game.state.enum';
 import { Visibility } from '../enums/game.visibilty.enum';
 import { FriendshipService } from '../../users/friendship.service';
+import { GameSubstate } from '../enums/game.substate.enum';
 
 @Injectable()
 export class GameValidator {
@@ -48,6 +49,14 @@ export class GameValidator {
     }
   }
 
+  validateGameSubstate(game: Game, expectedSubstate: GameSubstate): void {
+    if (game.substate !== expectedSubstate) {
+      throw new ForbiddenException(
+        `Game with id ${game.id} is not in the expected substate: ${expectedSubstate}`,
+      );
+    }
+  }
+
   validateUserIsHost(game: Game, userId: number): void {
     if (game.host.id !== userId) {
       throw new ForbiddenException(
@@ -57,7 +66,7 @@ export class GameValidator {
   }
 
   validateUserIsPlayer(game: Game, userId: number): void {
-    const isPlayer = game.players.some(player => player.id === userId);
+    const isPlayer = game.playerProfiles.some(player => player.user.id === userId);
     
     if (!isPlayer) {
       throw new ForbiddenException(
@@ -67,7 +76,7 @@ export class GameValidator {
   }
 
   validateUserNotInGame(game: Game, userId: number): void {
-    const isPlayer = game.players.some(player => player.id === userId);
+    const isPlayer = game.playerProfiles.some(player => player.user.id === userId);
     
     if (isPlayer) {
       throw new ForbiddenException(
@@ -77,7 +86,7 @@ export class GameValidator {
   }
 
   validateGameHasCapacity(game: Game): void {
-    if (game.players.length >= game.size) {
+    if (game.playerProfiles.length >= game.size) {
       throw new ForbiddenException(`Game with id ${game.id} is full`);
     }
   }
@@ -110,7 +119,7 @@ export class GameValidator {
   }
 
   validateMinimumPlayers(game: Game, minPlayers: number = 2): void {
-    if (game.players.length < minPlayers) {
+    if (game.playerProfiles.length < minPlayers) {
       throw new ForbiddenException(
         `Cannot start a game with fewer than ${minPlayers} players`,
       );
