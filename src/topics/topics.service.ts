@@ -3,7 +3,7 @@ import { GenericCrudService } from '../common/services/generic.crud.service';
 import { Topic } from './entities/topic.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CreateTopicDto } from './dtos/createTopic.dto';
+import { CreateTopicInput } from './dtos/create-topic.input';
 
 
 @Injectable()
@@ -15,7 +15,7 @@ export class TopicsService extends GenericCrudService<Topic> {
         super(topicRepository)
     }
 
-    async createTopic(createTopicDto: CreateTopicDto): Promise<Topic> {
+    async createTopic(createTopicDto: CreateTopicInput): Promise<Topic> {
         const existingTopic = await this.topicRepository.findOne({
             where: { name: createTopicDto.name.trim() }
         })

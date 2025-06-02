@@ -2,7 +2,7 @@ import { IsNotEmpty, IsString, IsBoolean, IsOptional, IsInt } from 'class-valida
 import { Field, InputType, Int } from '@nestjs/graphql';
 
 @InputType()
-export class CreatePromptDto {
+export class CreatePromptInput {
     
     @Field()
     @IsString()
