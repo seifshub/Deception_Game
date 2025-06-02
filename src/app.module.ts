@@ -30,6 +30,7 @@ import { GamesModule } from './games/games.module';
 import { RoundsModule } from './rounds/rounds.module';
 import { Player } from './players/entities/player.entity';
 import { PlayersModule } from './players/players.module';
+import { AnswersModule } from './answers/answers.module';
 
 @Module({
   imports: [
@@ -73,6 +74,7 @@ import { PlayersModule } from './players/players.module';
     GamesModule,
     RoundsModule,
     PlayersModule,
+    AnswersModule,
   ],
   controllers: [AppController],
   providers: [

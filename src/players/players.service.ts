@@ -4,6 +4,9 @@ import { Player } from './entities/player.entity';
 import { GenericCrudService } from '../common/services/generic.crud.service';
 import { User } from '../users/entities/user.entity';
 import { Game } from '../games/entities/game.entity';
+import { CreateAnswerDto } from 'src/answers/dtos/create-answer.dto';
+import { AnswersService } from 'src/answers/answers.service';
+import { Round } from 'src/rounds/entities/round.entity';
 
 @Injectable()
 export class PlayersService extends GenericCrudService<
@@ -13,7 +16,8 @@ export class PlayersService extends GenericCrudService<
 > {
   constructor(
     playerRepository: Repository<Player>,
-  ) {
+    private readonly answerService: AnswersService, 
+) {
     super(playerRepository);
   }
 
@@ -29,6 +33,18 @@ export class PlayersService extends GenericCrudService<
     const player = await this.findOne(playerId)
     
     player.score += scoreToAdd;
+    return this.update(playerId, player);
+  }
+
+  async addAnswerToPlayer(playerId: number, CreateAnswerDto : CreateAnswerDto, round : Round): Promise<Player> {
+    const player = await this.findOne(playerId);
+    const answer = await this.answerService.createAnswer(CreateAnswerDto, round);
+
+    if (!player.answers) {
+      player.answers = [];
+    }
+
+    player.answers.push(answer);
     return this.update(playerId, player);
   }
 

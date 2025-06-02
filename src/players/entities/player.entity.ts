@@ -1,8 +1,9 @@
 import { ObjectType, Field, Int } from '@nestjs/graphql';
-import { Column, Entity, ManyToOne, JoinColumn, Unique } from 'typeorm';
+import { Column, Entity, ManyToOne, JoinColumn, Unique, OneToMany } from 'typeorm';
 import { GenericEntity } from '../../common/entities/generic.entity';
 import { User } from '../../users/entities/user.entity';
 import { Game } from '../../games/entities/game.entity';
+import { Answer } from 'src/answers/answers.entity';
 
 @ObjectType()
 @Entity()
@@ -17,6 +18,11 @@ export class Player extends GenericEntity {
   @ManyToOne(() => Game, game => game.playerProfiles)
   @JoinColumn({ name: 'game_id' })
   game: Game;
+
+  @Field(() => Answer, { nullable: true })
+  @OneToMany(() => Answer, answer => answer.player, { eager: true, cascade: true })
+  @JoinColumn({ name: 'player_id' })
+  answers: Answer[];
 
   @Field(() => Int)
   @Column({ default: 0 })
