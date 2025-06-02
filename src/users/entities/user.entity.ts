@@ -5,6 +5,7 @@ import { UQ_USER_EMAIL, UQ_USER_USERNAME } from '../users.constants';
 import { Role } from '../enums/role.enum';
 import { Friendship } from './friendship.entity';
 import { Game } from '../../games/entities/game.entity';
+import { Player } from 'src/players/entities/player.entity';
 
 @Entity()
 @ObjectType()
@@ -33,6 +34,7 @@ export class User extends GenericEntity {
   @OneToMany(() => Game, game => game.host)
   hostedGames: Game[];
 
-  @ManyToMany(() => Game, game => game.players)
-  joinedGames: Game[];
+  @OneToMany(() => Player, player => player.user) 
+  playerProfiles: Player[];
+  
 }

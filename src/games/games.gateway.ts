@@ -236,8 +236,8 @@ export class GamesGateway
     }
 
     async choseTopic(game: Game) : Promise<void> {
-        const randomPlayer = game.players[Math.floor(Math.random() * game.players.length)];
-        const randomPlayerSocket = this.retrievePlayerSocket(randomPlayer.id);
+        const randomPlayer = game.playerProfiles[Math.floor(Math.random() * game.playerProfiles.length)];
+        const randomPlayerSocket = this.retrievePlayerSocket(randomPlayer.user.id);
         
         const topics = await this.topicService.getRandomTopics(5);
 
@@ -250,8 +250,8 @@ export class GamesGateway
             game.id,
             'PlayerIsChoosingTopic',
             {
-                playerId: randomPlayer.id,
-                username: randomPlayer.username,
+                playerId: randomPlayer.user.id,
+                username: randomPlayer.user.username,
             },
             randomPlayer.id,
         );
