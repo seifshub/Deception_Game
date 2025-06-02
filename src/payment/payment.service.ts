@@ -9,7 +9,7 @@ import { MoreThan, Repository } from 'typeorm';
 import { StripeService } from '../stripe/stripe.service';
 import { User } from '../users/entities/user.entity';
 import Stripe from 'stripe';
-import { PaymentSession } from './entities/paymen-session.entity';
+import { PaymentSession } from './entities/payment-session.entity';
 
 @Injectable()
 export class PaymentService {

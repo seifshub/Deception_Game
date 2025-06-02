@@ -6,7 +6,7 @@ import { Notification } from '../../notifications/entities/notification.entity';
 import { Column, Entity, ManyToMany, OneToMany, Unique } from 'typeorm';
 import { Field, HideField, ObjectType } from '@nestjs/graphql';
 import { GenericEntity } from '../../common/entities/generic.entity';
-import { PaymentSession } from '../../payment/entities/paymen-session.entity';
+import { PaymentSession } from '../../payment/entities/payment-session.entity';
 import { Player } from 'src/players/entities/player.entity';
 
 @Entity()

@@ -4,7 +4,7 @@ import { PaymentResolver } from './payment.resolver';
 import { PaymentController } from './payment.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../users/entities/user.entity';
-import { PaymentSession } from './entities/paymen-session.entity';
+import { PaymentSession } from './entities/payment-session.entity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([User, PaymentSession])],

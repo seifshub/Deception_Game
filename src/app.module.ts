@@ -97,10 +97,10 @@ import * as bodyParser from 'body-parser';
       provide: APP_FILTER,
       useClass: GlobalExceptionFilter,
     },
-    {
-      provide: APP_FILTER,
-      useClass: ValidationExceptionFilter,
-    },
+    // {
+    //   provide: APP_FILTER,
+    //   useClass: ValidationExceptionFilter,
+    // },
   ],
 })
 export class AppModule implements NestModule {
