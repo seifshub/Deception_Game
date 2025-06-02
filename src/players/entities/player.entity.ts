@@ -4,6 +4,7 @@ import { GenericEntity } from '../../common/entities/generic.entity';
 import { User } from '../../users/entities/user.entity';
 import { Game } from '../../games/entities/game.entity';
 import { Answer } from 'src/answers/answers.entity';
+import { Vote } from 'src/votes/entities/vote.entity';
 
 @ObjectType()
 @Entity()
@@ -23,9 +24,12 @@ export class Player extends GenericEntity {
   @OneToMany(() => Answer, answer => answer.player, { eager: true, cascade: true })
   @JoinColumn({ name: 'player_id' })
   answers: Answer[];
-
+  
   @Field(() => Int)
   @Column({ default: 0 })
   score: number;
 
+  @Field(() => [Vote], { nullable: true })
+  @OneToMany(() => Vote, vote => vote.player, { eager: true, cascade: true })
+  votes: Vote[];
 }

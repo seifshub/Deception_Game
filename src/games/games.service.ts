@@ -17,6 +17,9 @@ import { PromptsService } from 'src/prompts/prompts.service';
 import { PlayersService } from 'src/players/players.service';
 import { Round } from 'src/rounds/entities/round.entity';
 import { CreateAnswerDto } from 'src/answers/dtos/create-answer.dto';
+import { CreateVoteInput } from 'src/votes/dto/create-vote.input';
+import { AnswersService } from 'src/answers/answers.service';
+import { Vote } from 'src/votes/entities/vote.entity';
 
 @Injectable()
 export class GamesService extends GenericCrudService<
@@ -31,6 +34,7 @@ export class GamesService extends GenericCrudService<
     private readonly roundsService: RoundsService, 
     private readonly promptService: PromptsService,
     private readonly playersService: PlayersService, 
+    private readonly answersService: AnswersService,
   ) {
     super(gameRepository);
   }
@@ -85,10 +89,8 @@ export class GamesService extends GenericCrudService<
     this.gameValidator.validateGameState(game, GameState.PREPARING);
     this.gameValidator.validateMinimumPlayers(game, 2);
     
-    
     game.status = GameState.IN_PROGRESS;
-    game.substate = GameSubstate.CHOOSING_TOPIC; 
-    
+
     return this.update(gameId, game);
   }
 
@@ -96,7 +98,7 @@ export class GamesService extends GenericCrudService<
     const game = await this.gameValidator.validateGameExists(gameId);
     
     this.gameValidator.validateUserIsHost(game, userId);
-    this.gameValidator.validateGameState(game, GameState.IN_PROGRESS);
+    this.gameValidator.validateGameState(game, GameState.FINAL_RESULTS);
     
     game.status = GameState.FINISHED;
     
@@ -223,14 +225,39 @@ async findAvailableGames(userId: number): Promise<Game[]> {
     this.playersService.addAnswerToPlayer(playerId, createAnswerDto, round);
   }
 
+  async submitVote(playerId: number, createVoteInput: CreateVoteInput, roundNumber: number): Promise<void> {
+    this.playersService.addVoteToPlayer(playerId, createVoteInput, roundNumber);
+  }
+
+  async switchState(gameId: number, currentState: GameState, newState: GameState): Promise<Game> {
+    const game = await this.gameValidator.validateGameExists(gameId);
+    this.gameValidator.validateGameState(game, currentState);
+
+    game.status = newState;
+    if (newState === GameState.FINISHED) {
+      game.substate = GameSubstate.NA; // Reset substate when game is finished
+    }
+    return this.update(gameId, game);
+
+  }
+
   async switchSubstate(gameId: number,currentSubState ,newSubstate: GameSubstate): Promise<Game> {
     const game = await this.gameValidator.validateGameExists(gameId);
     
-    this.gameValidator.validateGameState(game, currentSubState);
+    this.gameValidator.validateGameSubstate(game, currentSubState);
 
     game.substate = newSubstate;
 
     return this.update(gameId, game);
+  }
+
+  async addScoreToPlayer(playerId: number, scoreToAdd: number): Promise<void> {
+    this.playersService.addPlayerScore(playerId, scoreToAdd);
+  }
+
+  async getVotesForAnswer(answerId: number): Promise<Vote[]> {
+    return this.answersService.getVotesForAnswer(answerId);
+    
   }
 
   // These methods provide convenience wrappers around validator functions

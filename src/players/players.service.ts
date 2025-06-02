@@ -7,6 +7,8 @@ import { Game } from '../games/entities/game.entity';
 import { CreateAnswerDto } from 'src/answers/dtos/create-answer.dto';
 import { AnswersService } from 'src/answers/answers.service';
 import { Round } from 'src/rounds/entities/round.entity';
+import { CreateVoteInput } from 'src/votes/dto/create-vote.input';
+import { VotesService } from 'src/votes/votes.service';
 
 @Injectable()
 export class PlayersService extends GenericCrudService<
@@ -17,6 +19,7 @@ export class PlayersService extends GenericCrudService<
   constructor(
     playerRepository: Repository<Player>,
     private readonly answerService: AnswersService, 
+    private readonly voteService: VotesService,
 ) {
     super(playerRepository);
   }
@@ -45,6 +48,18 @@ export class PlayersService extends GenericCrudService<
     }
 
     player.answers.push(answer);
+    return this.update(playerId, player);
+  }
+
+  async addVoteToPlayer(playerId : number, createVoteInput : CreateVoteInput, roundNumber : number): Promise<Player> {
+    const player = await this.findOne(playerId);
+    const vote = await this.voteService.createVote(createVoteInput, player, roundNumber);
+
+    if (!player.votes) {
+      player.votes = [];
+    }
+
+    player.votes.push(vote);
     return this.update(playerId, player);
   }
 
