@@ -50,6 +50,7 @@ type Game {
   players: [User!]!
   name: String!
   size: Int!
+  current_size: Int!
 }
 
 enum GameState {
@@ -91,6 +92,7 @@ type User {
   createdAt: DateTime!
   updatedAt: DateTime!
   deletedAt: DateTime
+  notifications: [Notification!]
   email: String!
   username: String!
   role: Role!
@@ -100,6 +102,25 @@ type User {
   hostedGames: [Game!]!
   joinedGames: [Game!]!
   paymentSessions: [PaymentSession!]!
+}
+
+type Notification {
+  id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  deletedAt: DateTime
+  user: User!
+  title: String!
+  content: String!
+  type: NotificationTypeEnum!
+  isRead: Boolean!
+}
+
+"""The type of the notification"""
+enum NotificationTypeEnum {
+  FRIEND_REQUEST
+  FRIEND_REQUEST_ACCEPTED
+  LOBBY_INVITE
 }
 
 enum Role {
@@ -112,9 +133,32 @@ type PaymentResponse {
   sessionId: String!
 }
 
+type Prompt {
+  id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  deletedAt: DateTime
+  promptContent: String!
+  correctAnswer: String!
+  isActive: Boolean!
+  topic: Topic!
+}
+
+type Topic {
+  id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  deletedAt: DateTime
+  name: String!
+  description: String
+  isActive: Boolean!
+  prompts: [Prompt!]
+}
+
 type Query {
   Items: [Item!]!
   Item(id: ID!): Item!
+  myNotifications(page: Int! = 1, limit: Int! = 10): [Notification!]!
   Games: [Game!]!
   Game(id: ID!): Game!
   getAvailableGames: [Game!]!

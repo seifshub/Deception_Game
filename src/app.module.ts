@@ -24,9 +24,13 @@ import { GlobalExceptionFilter } from './common/filters/global-exception.filter'
 import { ValidationExceptionFilter } from './common/filters/validation-exception.filter';
 
 import { UsersModule } from './users/users.module';
+import { TopicsModule } from './topics/topics.module';
+import { PromptsModule } from './prompts/prompts.module';
 import { AuthModule } from './auth/auth.module';
 import { AccessControlModule } from './access-control/access-control.module';
 import { GamesModule } from './games/games.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { StripeModule } from './stripe/stripe.module';
 import { PaymentModule } from './payment/payment.module';
 
@@ -64,11 +68,15 @@ import * as bodyParser from 'body-parser';
       plugins: [ApolloServerPluginLandingPageLocalDefault()],
       context: ({ req, res }) => ({ req, res }),
     }),
+    EventEmitterModule.forRoot(),
     CommonModule,
     ItemsModule,
     UsersModule,
+    TopicsModule,
+    PromptsModule,
     AuthModule,
     AccessControlModule,
+    NotificationsModule,
     GamesModule,
     StripeModule,
     PaymentModule,
