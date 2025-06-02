@@ -6,6 +6,7 @@ import { User } from '../../users/entities/user.entity';
 import { GameState } from '../enums/game.state.enum';
 import { Visibility } from '../enums/game.visibilty.enum';
 import { FriendshipService } from '../../users/friendship.service';
+import { GameSubstate } from '../enums/game.substate.enum';
 
 @Injectable()
 export class GameValidator {
@@ -44,6 +45,14 @@ export class GameValidator {
     if (game.status !== expectedState) {
       throw new ForbiddenException(
         `Game with id ${game.id} is not in the expected state: ${expectedState}`,
+      );
+    }
+  }
+
+  validateGameSubstate(game: Game, expectedSubstate: GameSubstate): void {
+    if (game.substate !== expectedSubstate) {
+      throw new ForbiddenException(
+        `Game with id ${game.id} is not in the expected substate: ${expectedSubstate}`,
       );
     }
   }

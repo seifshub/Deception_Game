@@ -15,6 +15,11 @@ import { ForbiddenError } from '@nestjs/apollo';
 import { RoundsService } from 'src/rounds/rounds.service';
 import { PromptsService } from 'src/prompts/prompts.service';
 import { PlayersService } from 'src/players/players.service';
+import { Round } from 'src/rounds/entities/round.entity';
+import { CreateAnswerDto } from 'src/answers/dtos/create-answer.dto';
+import { CreateVoteInput } from 'src/votes/dto/create-vote.input';
+import { AnswersService } from 'src/answers/answers.service';
+import { Vote } from 'src/votes/entities/vote.entity';
 
 @Injectable()
 export class GamesService extends GenericCrudService<
@@ -29,6 +34,7 @@ export class GamesService extends GenericCrudService<
     private readonly roundsService: RoundsService, 
     private readonly promptService: PromptsService,
     private readonly playersService: PlayersService, 
+    private readonly answersService: AnswersService,
   ) {
     super(gameRepository);
   }
@@ -83,10 +89,8 @@ export class GamesService extends GenericCrudService<
     this.gameValidator.validateGameState(game, GameState.PREPARING);
     this.gameValidator.validateMinimumPlayers(game, 2);
     
-    
     game.status = GameState.IN_PROGRESS;
-    game.substate = GameSubstate.CHOOSING_TOPIC; 
-    
+
     return this.update(gameId, game);
   }
 
@@ -94,7 +98,7 @@ export class GamesService extends GenericCrudService<
     const game = await this.gameValidator.validateGameExists(gameId);
     
     this.gameValidator.validateUserIsHost(game, userId);
-    this.gameValidator.validateGameState(game, GameState.IN_PROGRESS);
+    this.gameValidator.validateGameState(game, GameState.FINAL_RESULTS);
     
     game.status = GameState.FINISHED;
     
@@ -123,10 +127,15 @@ export class GamesService extends GenericCrudService<
     }
     
     // Remove player
-    const playerIndex = game.playerProfiles.findIndex(player => player.id === userId);
-    game.playerProfiles.splice(playerIndex, 1);
+    const playerToDelete = game.playerProfiles.find(player => player.id === userId);
+    if (!playerToDelete) {// not nescassary since gameValidator.validateUserIsPlayer already checks this but I don't want to see a warning
+      throw new ForbiddenError(`Player with ID ${userId} is not in the game.`);
+    }
+    this.playersService.delete(playerToDelete.id);
     
-    return this.update(gameId, game);
+    this.update(gameId, game);
+
+    return this.findOne(gameId);
   }
 
 async findAvailableGames(userId: number): Promise<Game[]> {
@@ -194,6 +203,61 @@ async findAvailableGames(userId: number): Promise<Game[]> {
     game.substate = GameSubstate.GIVING_ANSWER; // Set substate to giving answer
 
     return this.gameRepository.save(game);
+  }
+
+  async retrieveCurrentRound(game : Game): Promise<Round> {
+
+    // This method retrieves the current round of the game, if any
+    if (!game || !game.gameRounds || game.gameRounds.length === 0) {
+      throw new ForbiddenError(`Game with ID ${game.id} has no rounds.`);
+    }
+
+    const currentRound = game.gameRounds[game.gameRounds.length - 1];
+
+    if (!currentRound) {
+      throw new ForbiddenError(`No current round found for game with ID ${game.id}.`);
+    }
+
+    return currentRound;
+  }
+
+  async submitAnswer(playerId : number, createAnswerDto: CreateAnswerDto, round : Round ): Promise<void> {
+    this.playersService.addAnswerToPlayer(playerId, createAnswerDto, round);
+  }
+
+  async submitVote(playerId: number, createVoteInput: CreateVoteInput, roundNumber: number): Promise<void> {
+    this.playersService.addVoteToPlayer(playerId, createVoteInput, roundNumber);
+  }
+
+  async switchState(gameId: number, currentState: GameState, newState: GameState): Promise<Game> {
+    const game = await this.gameValidator.validateGameExists(gameId);
+    this.gameValidator.validateGameState(game, currentState);
+
+    game.status = newState;
+    if (newState === GameState.FINISHED) {
+      game.substate = GameSubstate.NA; // Reset substate when game is finished
+    }
+    return this.update(gameId, game);
+
+  }
+
+  async switchSubstate(gameId: number,currentSubState ,newSubstate: GameSubstate): Promise<Game> {
+    const game = await this.gameValidator.validateGameExists(gameId);
+    
+    this.gameValidator.validateGameSubstate(game, currentSubState);
+
+    game.substate = newSubstate;
+
+    return this.update(gameId, game);
+  }
+
+  async addScoreToPlayer(playerId: number, scoreToAdd: number): Promise<void> {
+    this.playersService.addPlayerScore(playerId, scoreToAdd);
+  }
+
+  async getVotesForAnswer(answerId: number): Promise<Vote[]> {
+    return this.answersService.getVotesForAnswer(answerId);
+    
   }
 
   // These methods provide convenience wrappers around validator functions
