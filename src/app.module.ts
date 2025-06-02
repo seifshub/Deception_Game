@@ -27,6 +27,8 @@ import { TopicsModule } from './topics/topics.module';
 import { PromptsModule } from './prompts/prompts.module';
 import { AuthModule } from './auth/auth.module';
 import { GamesModule } from './games/games.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { RoundsModule } from './rounds/rounds.module';
 import { Player } from './players/entities/player.entity';
 import { PlayersModule } from './players/players.module';
@@ -65,6 +67,7 @@ import { VotesModule } from './votes/votes.module';
       plugins: [ApolloServerPluginLandingPageLocalDefault()],
       context: ({ req, res }) => ({ req, res }),
     }),
+    EventEmitterModule.forRoot(),
     CommonModule,
     ItemsModule,
     UsersModule,
@@ -72,6 +75,7 @@ import { VotesModule } from './votes/votes.module';
     PromptsModule,
     AuthModule,
     AccessControlModule,
+    NotificationsModule,
     GamesModule,
     RoundsModule,
     PlayersModule,

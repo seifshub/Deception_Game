@@ -9,15 +9,26 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { GenericCrudService } from '../common/services/generic.crud.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { FriendRequestReceivedEvent } from '../notifications/events/friend-request-notification.event';
+import {
+  FRIEND_REQUEST_ACCEPTED_EVENT,
+  FRIEND_REQUEST_RECEIVED_EVENT,
+} from '../notifications/constants/notifications.constants';
+import { FriendRequestAcceptedEvent } from '../notifications/events/friend-request-accepted-notification.event';
 
 @Injectable()
-export class FriendshipService {
+export class FriendshipService extends GenericCrudService<Friendship> {
   constructor(
     @InjectRepository(Friendship)
     private readonly friendshipRepository: Repository<Friendship>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-  ) {}
+    private eventEmitter: EventEmitter2,
+  ) {
+    super(friendshipRepository);
+  }
 
   async sendRequest(
     requesterId: number,
@@ -60,11 +71,16 @@ export class FriendshipService {
       }
     }
 
-    return this.friendshipRepository.save({
+    const friendship = await this.friendshipRepository.save({
       requester: { id: requesterId },
       addressee: { id: addresseeId },
       status: FriendshipStatus.PENDING,
     });
+    this.eventEmitter.emit(
+      FRIEND_REQUEST_RECEIVED_EVENT,
+      new FriendRequestReceivedEvent(addresseeId, requesterId, friendship.id),
+    );
+    return friendship;
   }
 
   async getPendingRequests(userId: number): Promise<Friendship[]> {
@@ -92,7 +108,16 @@ export class FriendshipService {
       );
     }
     req.status = FriendshipStatus.ACCEPTED;
-    return this.friendshipRepository.save(req);
+    const updatedFriendship = await this.friendshipRepository.save(req);
+    this.eventEmitter.emit(
+      FRIEND_REQUEST_ACCEPTED_EVENT,
+      new FriendRequestAcceptedEvent(
+        updatedFriendship.requester.id,
+        updatedFriendship.addressee.id,
+        updatedFriendship.id,
+      ),
+    );
+    return updatedFriendship;
   }
 
   async refuseRequest(userId: number, requestId: number): Promise<void> {

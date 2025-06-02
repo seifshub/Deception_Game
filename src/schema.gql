@@ -50,13 +50,13 @@ type Game {
   players: [User!]!
   name: String!
   size: Int!
-  current_size: Int!
 }
 
 enum GameState {
   PREPARING
   IN_PROGRESS
   ABORTED
+  FINAL_RESULTS
   FINISHED
 }
 
@@ -80,6 +80,7 @@ type User {
   createdAt: DateTime!
   updatedAt: DateTime!
   deletedAt: DateTime
+  notifications: [Notification!]
   email: String!
   username: String!
   role: Role!
@@ -87,6 +88,25 @@ type User {
   receivedFriendRequests: [Friendship!]!
   hostedGames: [Game!]!
   joinedGames: [Game!]!
+}
+
+type Notification {
+  id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  deletedAt: DateTime
+  user: User!
+  title: String!
+  content: String!
+  type: NotificationTypeEnum!
+  isRead: Boolean!
+}
+
+"""The type of the notification"""
+enum NotificationTypeEnum {
+  FRIEND_REQUEST
+  FRIEND_REQUEST_ACCEPTED
+  LOBBY_INVITE
 }
 
 enum Role {
@@ -119,6 +139,7 @@ type Topic {
 type Query {
   Items: [Item!]!
   Item(id: ID!): Item!
+  myNotifications(page: Int! = 1, limit: Int! = 10): [Notification!]!
   Games: [Game!]!
   Game(id: ID!): Game!
   getAvailableGames: [Game!]!
@@ -129,7 +150,7 @@ type Mutation {
   updateItem(id: ID!, updateItemInput: UpdateItemInput!): Item!
   removeItem(id: ID!): Boolean!
   createGame(createGameInput: CreateGameInput!): Game!
-  updateGame(gameId: ID!, updateGameInput: UpdateGameInput!): Game!
+  updateGame(id: ID!, updateGameInput: UpdateGameInput!): Game!
   removeGame(id: ID!): Boolean!
   create(createInput: CreateGameInput!): Game!
   joinGame(gameId: ID!): Game!
