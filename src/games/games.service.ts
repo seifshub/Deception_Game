@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Or, Repository } from 'typeorm';
+import { DeepPartial, In, Or, Repository } from 'typeorm';
 import { Game } from './entities/game.entity';
 import { CreateGameInput } from './dto/create-game.input';
 import { UpdateGameInput } from './dto/update-game.input';
@@ -14,34 +14,35 @@ import { GameSubstate } from './enums/game.substate.enum';
 import { ForbiddenError } from '@nestjs/apollo';
 import { RoundsService } from 'src/rounds/rounds.service';
 import { PromptsService } from 'src/prompts/prompts.service';
+import { PlayersService } from 'src/players/players.service';
 
 @Injectable()
 export class GamesService extends GenericCrudService<
   Game,
-  CreateGameInput,
-  UpdateGameInput
+  DeepPartial<Game>,
+  DeepPartial<Game>
 > {
   constructor(
     @InjectRepository(Game) private readonly gameRepository: Repository<Game>,
-    @InjectRepository(User) private readonly userRepository: Repository<User>,
     private readonly friendshipService: FriendshipService,
     private readonly gameValidator: GameValidator,
     private readonly roundsService: RoundsService, 
     private readonly promptService: PromptsService,
+    private readonly playersService: PlayersService, 
   ) {
     super(gameRepository);
   }
 
   async createGameWithHost(createGameInput: CreateGameInput, hostId: number): Promise<Game> {
     const host = await this.gameValidator.validateUserExists(hostId);
-    
-    const game = this.gameRepository.create({
+    const player = await this.playersService.createPlayerProfile(host)
+
+    return this.create({
       ...createGameInput,
       host,
-      players: [host],
+      playerProfiles: [player],
     });
     
-    return this.gameRepository.save(game);
   }
 
   async joinGame(gameId: number, userId: number): Promise<Game> {
@@ -53,9 +54,11 @@ export class GamesService extends GenericCrudService<
     this.gameValidator.validateGameHasCapacity(game);
     await this.gameValidator.validateGameVisibility(game, userId);
 
-    game.players.push(user);
-    
-    return this.gameRepository.save(game);
+    const player = await this.playersService.createPlayerProfile(user);
+
+    game.playerProfiles.push(player);
+
+    return this.update(gameId, game);
   }
 
   async updateGame(
@@ -70,7 +73,7 @@ export class GamesService extends GenericCrudService<
 
     Object.assign(game, updateGameInput);
     
-    return this.gameRepository.save(game);
+    return this.update(gameId, game);
   }
 
   async startGame(gameId: number, userId: number): Promise<Game> {
@@ -84,7 +87,7 @@ export class GamesService extends GenericCrudService<
     game.status = GameState.IN_PROGRESS;
     game.substate = GameSubstate.CHOOSING_TOPIC; 
     
-    return this.gameRepository.save(game);
+    return this.update(gameId, game);
   }
 
   async endGame(gameId: number, userId: number): Promise<Game> {
@@ -105,13 +108,13 @@ export class GamesService extends GenericCrudService<
     
     // If the host is leaving, reassign or cancel
     if (game.host.id === userId) {
-      if (game.status !== GameState.PREPARING || game.players.length <= 1) {
+      if (game.status !== GameState.PREPARING || game.playerProfiles.length <= 1) {
         game.status = GameState.ABORTED;
       } else {
         // Assign a new host (first player who isn't the current host)
-        const newHost = game.players.find(player => player.id !== userId);
-        if (newHost) {
-          game.host = newHost;
+        const HostPlayer = game.playerProfiles.find(player => player.user.id !== userId);
+        if (HostPlayer) {
+          game.host = HostPlayer.user;
         } else {
           // No new host can be found
           game.status = GameState.ABORTED;
@@ -120,10 +123,10 @@ export class GamesService extends GenericCrudService<
     }
     
     // Remove player
-    const playerIndex = game.players.findIndex(player => player.id === userId);
-    game.players.splice(playerIndex, 1);
+    const playerIndex = game.playerProfiles.findIndex(player => player.id === userId);
+    game.playerProfiles.splice(playerIndex, 1);
     
-    return this.gameRepository.save(game);
+    return this.update(gameId, game);
   }
 
 async findAvailableGames(userId: number): Promise<Game[]> {
@@ -164,10 +167,10 @@ async findAvailableGames(userId: number): Promise<Game[]> {
       
       const game = await this.gameRepository.findOne({
           where: {
-              players: { id: user.id },
+              playerProfiles: { user: { id: user.id } },
               status: In([GameState.IN_PROGRESS, GameState.PREPARING]),
           },
-          relations: ['host', 'players'],
+          relations: ['host', 'players', 'playerProfiles', 'playerProfiles.user'],
       });
 
   return game || null;
@@ -192,8 +195,6 @@ async findAvailableGames(userId: number): Promise<Game[]> {
 
     return this.gameRepository.save(game);
   }
-
-  
 
   // These methods provide convenience wrappers around validator functions
   async verifyGameExists(gameId: number): Promise<Game> {

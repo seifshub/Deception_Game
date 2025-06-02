@@ -57,7 +57,7 @@ export class GameValidator {
   }
 
   validateUserIsPlayer(game: Game, userId: number): void {
-    const isPlayer = game.players.some(player => player.id === userId);
+    const isPlayer = game.playerProfiles.some(player => player.user.id === userId);
     
     if (!isPlayer) {
       throw new ForbiddenException(
@@ -67,7 +67,7 @@ export class GameValidator {
   }
 
   validateUserNotInGame(game: Game, userId: number): void {
-    const isPlayer = game.players.some(player => player.id === userId);
+    const isPlayer = game.playerProfiles.some(player => player.user.id === userId);
     
     if (isPlayer) {
       throw new ForbiddenException(
@@ -77,7 +77,7 @@ export class GameValidator {
   }
 
   validateGameHasCapacity(game: Game): void {
-    if (game.players.length >= game.size) {
+    if (game.playerProfiles.length >= game.size) {
       throw new ForbiddenException(`Game with id ${game.id} is full`);
     }
   }
@@ -110,7 +110,7 @@ export class GameValidator {
   }
 
   validateMinimumPlayers(game: Game, minPlayers: number = 2): void {
-    if (game.players.length < minPlayers) {
+    if (game.playerProfiles.length < minPlayers) {
       throw new ForbiddenException(
         `Cannot start a game with fewer than ${minPlayers} players`,
       );
