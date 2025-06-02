@@ -1,98 +1,117 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Deception Game
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
-
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+The Deception Game API is a backend for a multiplayer bluffing game where players submit convincing lies to fill in missing answers and then vote to identify the true response. Built with NestJS and TypeORM, it exposes both REST and GraphQL endpoints. Real-time game flow is powered by WebSockets, Server-Sent Events (SSE) deliver live notifications (e.g., friend request, invite to lobby...). Additionally, secure payment processing is handled via webhook endpoint for premium purchase.
 
-## Project setup
+**Key Features:**
 
-```bash
-$ npm install
-```
+* Multiplayer game rounds: submit lies to questions, vote on answers, track scores
+* Hybrid API: REST (traditional endpoints) and GraphQL (flexible queries/mutations)
+* WebSockets for live game updates and synchronization
+* SSE for push notifications
+* Webhooks to securely receive payment events (with Stripe)
+* Session-based authentication with passport and role-based access control
 
-## Compile and run the project
+## Gameplay Example
+Let’s walk through an example round of the game.
 
-```bash
-# development
-$ npm run start
+One of the players is chosen to pick a topic, they choose geography,  and the game randomly selects the following question from database: *What is the capital of Germany?*
 
-# watch mode
-$ npm run start:dev
+Players now submit their fake answers (lies).
 
-# production mode
-$ npm run start:prod
-```
+* Player 1 submits *Frankfurt*
+* Player 2 submits *Munich*
+* Player 3 submits *Hannover*
 
-## Run tests
+The game does **not** allow players to submit the correct answer, *Berlin*.
 
-```bash
-# unit tests
-$ npm run test
+After all players submit their lies, the game displays all the fake answers along with the correct one (*Berlin*). At this point, players must try to choose the correct answer. If they don't know it, they have to guess.
 
-# e2e tests
-$ npm run test:e2e
+Once this phase is over, scores are updated. If a player chooses another player’s lie—for example, if Player 1 picks *Munich* (submitted by Player 2)—then Player 2 earns points for successfully fooling Player 1.
 
-# test coverage
-$ npm run test:cov
-```
+After scoring, the round ends.
 
-## Deployment
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## Technical Details
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Entities Diagram
+<img src="docs/entities-diagram.svg" height="600"  alt="Entities Diagram" />
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
+---
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### Justification for Use of REST & GraphQL
 
-## Resources
+**REST** is used for classic endpoints where the payloads and behavior are simple, predictable, and well-defined. This includes things like authentication, webhooks, and the Server-Sent Events (SSE) endpoint. These endpoints don’t require complex data querying or nested responses.
 
-Check out a few resources that may come in handy when working with NestJS:
+**GraphQL** is used for parts of the system that deal with game-related data and require complex or flexible queries. It's particularly useful when we need to fetch nested or relational data in a single request, avoiding over-fetching or under-fetching. For example, on the landing page, we need to retrieve various types of data like available lobbies, game history, friends, and notifications. Additionally, GraphQL makes complex mutations easier to manage, especially in CRUD operations across different game features.
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+---
 
-## Support
+### Event-Driven API Technologies
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+#### Server-Sent Events (SSE)
 
-## Stay in touch
+SSE is used to send real-time notifications to authenticated users. Notifications include:
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+* Received friend request
+* Accepted friend request
+* Lobby invitation
 
-## License
+SSE is a good fit for this use case because it's unidirectional (server → client), which suits notification delivery perfectly.
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+#### Webhooks
+
+Webhooks are used for Stripe payments. Our platform offers a one-time purchase of a lifetime premium status, which unlocks privileges such as more game topics and additional rounds. Stripe uses webhooks to notify our backend of successful transactions.
+
+#### WebSockets
+
+The main game loop is implemented using WebSockets. Since this is a real-time multiplayer game, WebSockets are essential for enabling continuous two-way communication between the server and all connected players.
+
+---
+
+### Game Logic Workflow
+
+<img src="docs/game_logic_workflow.svg" height="600" alt="Game Logic Workflow" />
+
+1. A user hosts a game
+   **State: `PREPARING` | Substate: `N/A`**
+
+2. Players join the game
+   **State: `PREPARING` | Substate: `N/A`**
+
+3. The host starts the game
+   **State: `IN_PROGRESS` | Substate: `N/A`**
+
+4. Each round includes the following steps:
+
+    * One player chooses the topic (following round table)
+      **Substate: `CHOOSING_TOPIC`**
+    * A question is sent to all players
+    * Players submit fake answers (lies)
+      **Substate: `GIVING_ANSWER`**
+    * After all submissions, the fake answers plus the correct one are shown to everyone
+      **Substate: `VOTING`**
+    * Players vote on what they think is the correct answer
+    * Results are displayed to all players
+      **Substate: `SHOWING_RESULTS`**
+
+5. After the final round, final results are sent
+   **State: `FINAL_RESULTS` | Substate: `N/A`**
+
+6. The game ends
+   **State: `FINISHED` | Substate: `N/A`**
+
+---
+
+
+## Team Members
+
+| Name           | Contribution                        |
+|----------------|-------------------------------------|
+| Seif Eddine Chouchane | [View](docs/contributions/seif.md)  |
+| Rayen Kasmi    | [View](docs/contributions/rayen.md) |
+| Iyed Abdelli   | [View](docs/contributions/iyed.md)  |
+
+
