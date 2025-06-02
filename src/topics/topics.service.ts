@@ -33,15 +33,9 @@ export class TopicsService extends GenericCrudService<Topic> {
     }
 
     async getRandomTopic(): Promise<Topic> {
-        const topic = await this.topicRepository
-            .createQueryBuilder('topic')
-            .where('topic.isActive = :isActive', { isActive: true })
-            .orderBy('RANDOM()')
-            .limit(1)
-            .getOne();
-        if (!topic) {
-            throw new BadRequestException('No active topics found');
-        }
+        const topics = await this.getRandomTopics(1);
+        const topic = topics[0];
+        
         return topic;
     }
 
