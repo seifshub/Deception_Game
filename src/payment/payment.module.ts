@@ -3,11 +3,11 @@ import { PaymentService } from './payment.service';
 import { PaymentResolver } from './payment.resolver';
 import { PaymentController } from './payment.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from '../users/entities/user.entity';
 import { PaymentSession } from './entities/payment-session.entity';
+import { UsersModule } from '../users/users.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, PaymentSession])],
+  imports: [TypeOrmModule.forFeature([PaymentSession]), UsersModule],
   providers: [PaymentService, PaymentResolver],
   controllers: [PaymentController],
 })

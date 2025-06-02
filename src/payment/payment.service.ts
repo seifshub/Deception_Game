@@ -10,6 +10,7 @@ import { StripeService } from '../stripe/stripe.service';
 import { User } from '../users/entities/user.entity';
 import Stripe from 'stripe';
 import { PaymentSession } from './entities/payment-session.entity';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class PaymentService {
@@ -19,8 +20,7 @@ export class PaymentService {
 
   constructor(
     private readonly stripeService: StripeService,
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
+    private readonly usersService: UsersService,
     @InjectRepository(PaymentSession)
     private readonly sessionRepository: Repository<PaymentSession>,
   ) {}
@@ -28,7 +28,7 @@ export class PaymentService {
   async createPaymentSession(
     userId: number,
   ): Promise<{ checkoutUrl: string; sessionId: string }> {
-    const user = await this.userRepository.findOne({ where: { id: userId } });
+    const user = await this.usersService.findOne(userId);
     if (!user) {
       throw new NotFoundException(`User with ID ${userId} not found`);
     }
@@ -115,8 +115,10 @@ export class PaymentService {
       return;
     }
 
-    const user = await this.userRepository.findOne({ where: { id: userId } });
-    if (!user) {
+    let user;
+    try {
+      user = await this.usersService.findOne(userId);
+    } catch (e) {
       this.logger.error(`User not found for ID ${userId}`);
       return;
     }
@@ -135,8 +137,7 @@ export class PaymentService {
     paymentSession.completed = true;
     await this.sessionRepository.save(paymentSession);
 
-    user.isPremium = true;
-    await this.userRepository.save(user);
+    await this.usersService.update(userId, { isPremium: true });
     this.logger.log(`User ${userId} has been upgraded to premium.`);
   }
 }
