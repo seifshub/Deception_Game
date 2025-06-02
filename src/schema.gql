@@ -50,7 +50,6 @@ type Game {
   players: [User!]!
   name: String!
   size: Int!
-  current_size: Int!
 }
 
 enum GameState {
@@ -128,11 +127,6 @@ enum Role {
   Admin
 }
 
-type PaymentResponse {
-  checkoutUrl: String!
-  sessionId: String!
-}
-
 type Prompt {
   id: ID!
   createdAt: DateTime!
@@ -153,6 +147,11 @@ type Topic {
   description: String
   isActive: Boolean!
   prompts: [Prompt!]
+}
+
+type PaymentResponse {
+  checkoutUrl: String!
+  sessionId: String!
 }
 
 type Query {

@@ -7,7 +7,7 @@ import { Prompt } from './entities/prompt.entity';
 import { CreatePromptInput } from './dtos/create-prompt.input';
 import { PromptsService } from './prompts.service';
 import { UpdatePromptInput } from './dtos/update-prompt.input';
-import { Roles } from 'src/auth/access-control/decorators/roles.decorator';
+import { Roles } from 'src/access-control/decorators/roles.decorator';
 import { Role } from 'src/users/enums/role.enum';
 
 @Roles(Role.Admin)

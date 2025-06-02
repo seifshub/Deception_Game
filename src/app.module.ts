@@ -21,7 +21,6 @@ import { ItemsModule } from './items/items.module';
 import { LoggerMiddleware } from './common/middlewares/logger.middleware';
 import { APP_FILTER } from '@nestjs/core';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
-import { ValidationExceptionFilter } from './common/filters/validation-exception.filter';
 
 import { UsersModule } from './users/users.module';
 import { TopicsModule } from './topics/topics.module';
