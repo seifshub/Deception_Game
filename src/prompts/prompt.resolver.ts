@@ -8,8 +8,12 @@ import { Prompt } from './entities/prompt.entity';
 import { CreatePromptInput } from './dtos/create-prompt.input';
 import { PromptsService } from './prompts.service';
 import { UpdatePromptInput } from './dtos/update-prompt.input';
+import { Roles } from 'src/auth/access-control/decorators/roles.decorator';
+import { Role } from 'src/users/enums/role.enum';
+import { RolesGuard } from 'src/auth/access-control/guards/roles.guard';
 
-@UseGuards(SessionGuard)
+@Roles(Role.Admin)
+@UseGuards(SessionGuard, RolesGuard)
 @Resolver(() => Prompt)
 export class PromptsResolver extends GenericResolver(
     Prompt as Type<Prompt> & Prompt,

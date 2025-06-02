@@ -8,8 +8,12 @@ import { Topic } from './entities/topic.entity';
 import { CreateTopicInput } from './dtos/create-topic.input';
 import { TopicsService } from './topics.service';
 import { UpdateTopicInput } from './dtos/update-topic.input';
+import { Roles } from 'src/auth/access-control/decorators/roles.decorator';
+import { Role } from 'src/users/enums/role.enum';
+import { RolesGuard } from 'src/auth/access-control/guards/roles.guard';
 
-@UseGuards(SessionGuard)
+@Roles(Role.Admin)
+@UseGuards(SessionGuard, RolesGuard)
 @Resolver(() => Topic)
 export class TopicsResolver extends GenericResolver(
   Topic as Type<Topic> & Topic,
