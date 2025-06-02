@@ -28,6 +28,8 @@ import { PromptsModule } from './prompts/prompts.module';
 import { AuthModule } from './auth/auth.module';
 import { AccessControlModule } from './access-control/access-control.module';
 import { GamesModule } from './games/games.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
@@ -61,6 +63,7 @@ import { GamesModule } from './games/games.module';
       plugins: [ApolloServerPluginLandingPageLocalDefault()],
       context: ({ req, res }) => ({ req, res }),
     }),
+    EventEmitterModule.forRoot(),
     CommonModule,
     ItemsModule,
     UsersModule,
@@ -68,6 +71,7 @@ import { GamesModule } from './games/games.module';
     PromptsModule,
     AuthModule,
     AccessControlModule,
+    NotificationsModule,
     GamesModule,
   ],
   controllers: [AppController],

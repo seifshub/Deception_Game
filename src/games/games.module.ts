@@ -9,11 +9,7 @@ import { UsersModule } from 'src/users/users.module';
 import { GameValidator } from './validators/game.validator';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Game, User]),
-    CommonModule,
-    UsersModule,
-  ],
+  imports: [TypeOrmModule.forFeature([Game, User]), CommonModule, UsersModule],
   providers: [GamesResolver, GamesService, GameValidator],
   exports: [GamesService],
 })
