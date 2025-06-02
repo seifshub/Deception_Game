@@ -1,19 +1,16 @@
 import { Resolver, Mutation, Args, Query, ID, Int } from '@nestjs/graphql';
 import { GenericResolver } from '../common/resolvers/generic.resolver';
-import { Type, UseGuards } from '@nestjs/common';
+import { Type } from '@nestjs/common';
 import { ActiveUser } from '../auth/decorators/active-user.decorator';
 import { ActiveUserData } from '../auth/interfaces/active-user-data.interface';
-import { SessionGuard } from '../auth/guards/session.guard';
 import { Topic } from './entities/topic.entity';
 import { CreateTopicInput } from './dtos/create-topic.input';
 import { TopicsService } from './topics.service';
 import { UpdateTopicInput } from './dtos/update-topic.input';
 import { Roles } from 'src/auth/access-control/decorators/roles.decorator';
 import { Role } from 'src/users/enums/role.enum';
-import { RolesGuard } from 'src/auth/access-control/guards/roles.guard';
 
 @Roles(Role.Admin)
-@UseGuards(SessionGuard, RolesGuard)
 @Resolver(() => Topic)
 export class TopicsResolver extends GenericResolver(
   Topic as Type<Topic> & Topic,
