@@ -12,6 +12,7 @@ import { RoundsModule } from 'src/rounds/rounds.module';
 import { PromptsService } from 'src/prompts/prompts.service';
 import { TopicsService } from 'src/topics/topics.service';
 import { PlayersModule } from 'src/players/players.module';
+import { AnswersModule } from 'src/answers/answers.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { PlayersModule } from 'src/players/players.module';
     RoundsModule,
     PromptsService,
     TopicsService,
+    AnswersModule,
     PlayersModule,
   ],
   providers: [GamesResolver, GamesService, GameValidator, GamesGateway],
