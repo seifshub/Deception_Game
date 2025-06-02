@@ -1,4 +1,5 @@
 import {
+  Inject,
   MiddlewareConsumer,
   Module,
   NestModule,
@@ -17,7 +18,7 @@ import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 import { join } from 'path';
 import { ItemsModule } from './items/items.module';
-import { LoggerMiddleware } from './common/middleware/logger.middleware';
+import { LoggerMiddleware } from './common/middlewares/logger.middleware';
 import { APP_FILTER } from '@nestjs/core';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { ValidationExceptionFilter } from './common/filters/validation-exception.filter';
@@ -26,6 +27,10 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { AccessControlModule } from './access-control/access-control.module';
 import { GamesModule } from './games/games.module';
+import { StripeModule } from './stripe/stripe.module';
+import { PaymentModule } from './payment/payment.module';
+
+import * as bodyParser from 'body-parser';
 
 @Module({
   imports: [
@@ -65,6 +70,8 @@ import { GamesModule } from './games/games.module';
     AuthModule,
     AccessControlModule,
     GamesModule,
+    StripeModule,
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [
@@ -73,17 +80,37 @@ import { GamesModule } from './games/games.module';
       provide: APP_FILTER,
       useClass: GlobalExceptionFilter,
     },
-    {
-      provide: APP_FILTER,
-      useClass: ValidationExceptionFilter,
-    },
+    // {
+    //   provide: APP_FILTER,
+    //   useClass: ValidationExceptionFilter,
+    // },
   ],
 })
 export class AppModule implements NestModule {
+  constructor(
+    @Inject(AppConfig.KEY)
+    private readonly appConfig: ConfigType<typeof AppConfig>,
+  ) {}
+
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(LoggerMiddleware)
       .exclude({ path: 'graphql', method: RequestMethod.ALL })
+      .forRoutes('*');
+
+    const webhookPath = this.appConfig.stripe.webhookRoute!;
+
+    consumer
+      .apply(
+        bodyParser.raw({
+          type: 'application/json',
+        }),
+      )
+      .forRoutes({ path: webhookPath, method: RequestMethod.POST });
+
+    consumer
+      .apply(bodyParser.json(), bodyParser.urlencoded({ extended: true }))
+      .exclude({ path: webhookPath, method: RequestMethod.POST })
       .forRoutes('*');
   }
 }

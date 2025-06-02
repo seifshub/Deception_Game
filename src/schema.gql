@@ -50,13 +50,13 @@ type Game {
   players: [User!]!
   name: String!
   size: Int!
-  current_size: Int!
 }
 
 enum GameState {
   PREPARING
   IN_PROGRESS
   ABORTED
+  FINAL_RESULTS
   FINISHED
 }
 
@@ -75,6 +75,17 @@ enum Visibility {
   FRIENDS_ONLY
 }
 
+type PaymentSession {
+  id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  deletedAt: DateTime
+  stripeSessionId: String!
+  stripeExpiresAt: Int!
+  completed: Boolean!
+  user: User!
+}
+
 type User {
   id: ID!
   createdAt: DateTime!
@@ -83,15 +94,22 @@ type User {
   email: String!
   username: String!
   role: Role!
+  isPremium: Boolean!
   sentFriendRequests: [Friendship!]!
   receivedFriendRequests: [Friendship!]!
   hostedGames: [Game!]!
   joinedGames: [Game!]!
+  paymentSessions: [PaymentSession!]!
 }
 
 enum Role {
   Regular
   Admin
+}
+
+type PaymentResponse {
+  checkoutUrl: String!
+  sessionId: String!
 }
 
 type Query {
@@ -107,12 +125,17 @@ type Mutation {
   updateItem(id: ID!, updateItemInput: UpdateItemInput!): Item!
   removeItem(id: ID!): Boolean!
   createGame(createGameInput: CreateGameInput!): Game!
-  updateGame(gameId: ID!, updateGameInput: UpdateGameInput!): Game!
+  updateGame(id: ID!, updateGameInput: UpdateGameInput!): Game!
   removeGame(id: ID!): Boolean!
   create(createInput: CreateGameInput!): Game!
   joinGame(gameId: ID!): Game!
   update(gameId: ID!, updateInput: UpdateGameInput!): Game!
   leaveGame(gameId: ID!): Game!
+
+  """
+  Creates a Stripe Checkout Session for a one-time “lifetime premium” purchase
+  """
+  createPayment: PaymentResponse!
 }
 
 input CreateItemInput {
