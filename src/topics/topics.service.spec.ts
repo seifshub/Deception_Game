@@ -3,7 +3,7 @@ import { TopicsService } from './topics.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Topic } from './entities/topic.entity';
 import { Repository } from 'typeorm';
-import { CreateTopicDto } from './dtos/createTopic.dto';
+import { CreateTopicDto } from './dtos/create-topic.input';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 describe('TopicsService', () => {

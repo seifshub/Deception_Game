@@ -4,7 +4,7 @@ import { Prompt } from './entities/prompt.entity';
 import { Repository } from 'typeorm';
 import { GenericCrudService } from '../common/services/generic.crud.service';
 import { TopicsService } from '../topics/topics.service';
-import { CreatePromptDto } from './dtos/createPrompt.dto';
+import { CreatePromptInput } from './dtos/create-prompt.input';
 
 @Injectable()
 export class PromptsService extends GenericCrudService<Prompt> {
@@ -16,7 +16,7 @@ export class PromptsService extends GenericCrudService<Prompt> {
         super(promptRepository);
     }
 
-    async createPrompt(createDto: CreatePromptDto): Promise<Prompt> {
+    async createPrompt(createDto: CreatePromptInput): Promise<Prompt> {
         const topic = await this.topicService.findById(createDto.topicId);
 
         const prompt = this.promptRepository.create({
@@ -83,15 +83,4 @@ export class PromptsService extends GenericCrudService<Prompt> {
 
         return prompts;
     }
-
-    async validatePromptCorrectAnswer(promptId: number, userAnswer: string): Promise<boolean> {
-        const prompt = await this.promptRepository.findOneBy({ id: promptId });
-        if (!prompt) throw new NotFoundException(`Prompt with ID ${promptId} not found`);
-
-        return prompt.correctAnswer.trim().toLowerCase() === userAnswer.trim().toLowerCase();
-    }
-
-
-
-
 }

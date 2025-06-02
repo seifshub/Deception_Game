@@ -10,7 +10,7 @@ import {
     Query,
 } from '@nestjs/common';
 import { PromptsService } from './prompts.service';
-import { CreatePromptDto } from './dtos/createPrompt.dto';
+import { CreatePromptInput } from './dtos/create-prompt.input';
 import { Prompt } from './entities/prompt.entity';
 
 @Controller('prompts')
@@ -18,7 +18,7 @@ export class PromptsController {
     constructor(private readonly promptsService: PromptsService) { }
 
     @Post()
-    async createPrompt(@Body() createDto: CreatePromptDto): Promise<Prompt> {
+    async createPrompt(@Body() createDto: CreatePromptInput): Promise<Prompt> {
         return this.promptsService.createPrompt(createDto);
     }
 
@@ -35,18 +35,6 @@ export class PromptsController {
         @Query('count') count = 3,
     ): Promise<Prompt[]> {
         return this.promptsService.getRandomPrompts(topicId, Number(count));
-    }
-
-    @Get('validate/:promptId')
-    async validateAnswer(
-        @Param('promptId', ParseIntPipe) promptId: number,
-        @Query('answer') userAnswer: string,
-    ): Promise<{ isCorrect: boolean }> {
-        const isCorrect = await this.promptsService.validatePromptCorrectAnswer(
-            promptId,
-            userAnswer,
-        );
-        return { isCorrect };
     }
 
     @Put('deactivate/:id')

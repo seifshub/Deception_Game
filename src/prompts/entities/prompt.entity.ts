@@ -19,6 +19,4 @@ export class Prompt extends GenericEntity {
 
     @ManyToOne(() => Topic, topic => topic.prompts, { eager: false})
     topic: Topic;
-
-    
 }

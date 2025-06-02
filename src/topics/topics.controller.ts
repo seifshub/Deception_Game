@@ -10,7 +10,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { TopicsService } from './topics.service';
-import { CreateTopicDto } from './dtos/createTopic.dto';
+import { CreateTopicInput } from './dtos/create-topic.input';
 import { Topic } from './entities/topic.entity';
 
 @Controller('topics')
@@ -18,7 +18,7 @@ export class TopicsController {
   constructor(private readonly topicsService: TopicsService) {}
 
   @Post()
-  async createTopic(@Body() createDto: CreateTopicDto): Promise<Topic> {
+  async createTopic(@Body() createDto: CreateTopicInput): Promise<Topic> {
     return this.topicsService.createTopic(createDto);
   }
 
