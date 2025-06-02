@@ -123,10 +123,15 @@ export class GamesService extends GenericCrudService<
     }
     
     // Remove player
-    const playerIndex = game.playerProfiles.findIndex(player => player.id === userId);
-    game.playerProfiles.splice(playerIndex, 1);
+    const playerToDelete = game.playerProfiles.find(player => player.id === userId);
+    if (!playerToDelete) {// not nescassary since gameValidator.validateUserIsPlayer already checks this but I don't want to see a warning
+      throw new ForbiddenError(`Player with ID ${userId} is not in the game.`);
+    }
+    this.playersService.delete(playerToDelete.id);
     
-    return this.update(gameId, game);
+    this.update(gameId, game);
+
+    return this.findOne(gameId);
   }
 
 async findAvailableGames(userId: number): Promise<Game[]> {
