@@ -6,6 +6,7 @@ import { Notification } from '../../notifications/entities/notification.entity';
 import { Column, Entity, ManyToMany, OneToMany, Unique } from 'typeorm';
 import { Field, HideField, ObjectType } from '@nestjs/graphql';
 import { GenericEntity } from '../../common/entities/generic.entity';
+import { PaymentSession } from '../../payment/entities/payment-session.entity';
 import { Player } from 'src/players/entities/player.entity';
 
 @Entity()
@@ -26,6 +27,9 @@ export class User extends GenericEntity {
   @Column({ enum: Role, default: Role.Regular })
   role: Role;
 
+  @Column({ default: false })
+  isPremium: boolean;
+
   @OneToMany(() => Friendship, (friendship) => friendship.requester)
   sentFriendRequests: Friendship[];
 
@@ -39,7 +43,10 @@ export class User extends GenericEntity {
   @OneToMany(() => Game, (game) => game.host)
   hostedGames: Game[];
 
-  @OneToMany(() => Player, player => player.user) 
+  @OneToMany(() => PaymentSession, (paymentSession) => paymentSession.user)
+  paymentSessions: PaymentSession[];
+
+  @OneToMany(() => Player, player => player.user)
   playerProfiles: Player[];
-  
+
 }

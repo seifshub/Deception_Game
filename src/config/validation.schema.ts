@@ -7,4 +7,9 @@ export const validationSchema = Joi.object({
   DATABASE_PASSWORD: Joi.string().required(),
   DATABASE_NAME: Joi.string().required(),
   SESSION_SECRET: Joi.string().required(),
+  STRIPE_SECRET_KEY: Joi.string().required(),
+  STRIPE_CURRENCY: Joi.string().required(),
+  STRIPE_WEBHOOK_SIGNING_SECRET: Joi.string().required(),
+  STRIPE_WEBHOOK_ROUTE: Joi.string().required(),
+  FRONTEND_URL: Joi.string().required(),
 });

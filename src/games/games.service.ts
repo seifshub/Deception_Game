@@ -31,9 +31,9 @@ export class GamesService extends GenericCrudService<
     @InjectRepository(Game) private readonly gameRepository: Repository<Game>,
     private readonly friendshipService: FriendshipService,
     private readonly gameValidator: GameValidator,
-    private readonly roundsService: RoundsService, 
+    private readonly roundsService: RoundsService,
     private readonly promptService: PromptsService,
-    private readonly playersService: PlayersService, 
+    private readonly playersService: PlayersService,
     private readonly answersService: AnswersService,
   ) {
     super(gameRepository);
@@ -41,20 +41,20 @@ export class GamesService extends GenericCrudService<
 
   async createGameWithHost(createGameInput: CreateGameInput, hostId: number): Promise<Game> {
     const host = await this.gameValidator.validateUserExists(hostId);
-    const player = await this.playersService.createPlayerProfile(host)
+    const player = await this.playersService.createPlayerProfile(host);
 
     return this.create({
       ...createGameInput,
       host,
       playerProfiles: [player],
     });
-    
+
   }
 
   async joinGame(gameId: number, userId: number): Promise<Game> {
     const game = await this.gameValidator.validateGameExists(gameId);
     const user = await this.gameValidator.validateUserExists(userId);
-    
+
     this.gameValidator.validateGameState(game, GameState.PREPARING);
     this.gameValidator.validateUserNotInGame(game, userId);
     this.gameValidator.validateGameHasCapacity(game);
@@ -73,22 +73,22 @@ export class GamesService extends GenericCrudService<
     userId: number,
   ): Promise<Game> {
     this.gameValidator.validateUserIdProvided(userId);
-    
+
     const game = await this.gameValidator.validateGameExists(gameId);
     this.gameValidator.validateUserIsHost(game, userId);
 
     Object.assign(game, updateGameInput);
-    
+
     return this.update(gameId, game);
   }
 
   async startGame(gameId: number, userId: number): Promise<Game> {
     const game = await this.gameValidator.validateGameExists(gameId);
-    
+
     this.gameValidator.validateUserIsHost(game, userId);
     this.gameValidator.validateGameState(game, GameState.PREPARING);
     this.gameValidator.validateMinimumPlayers(game, 2);
-    
+
     game.status = GameState.IN_PROGRESS;
 
     return this.update(gameId, game);
@@ -96,20 +96,20 @@ export class GamesService extends GenericCrudService<
 
   async endGame(gameId: number, userId: number): Promise<Game> {
     const game = await this.gameValidator.validateGameExists(gameId);
-    
+
     this.gameValidator.validateUserIsHost(game, userId);
     this.gameValidator.validateGameState(game, GameState.FINAL_RESULTS);
-    
+
     game.status = GameState.FINISHED;
-    
+
     return this.gameRepository.save(game);
   }
 
   async leaveGame(gameId: number, userId: number): Promise<Game> {
     const game = await this.gameValidator.validateGameExists(gameId);
-    
+
     this.gameValidator.validateUserIsPlayer(game, userId);
-    
+
     // If the host is leaving, reassign or cancel
     if (game.host.id === userId) {
       if (game.status !== GameState.PREPARING || game.playerProfiles.length <= 1) {
@@ -125,20 +125,20 @@ export class GamesService extends GenericCrudService<
         }
       }
     }
-    
+
     // Remove player
     const playerToDelete = game.playerProfiles.find(player => player.id === userId);
     if (!playerToDelete) {// not nescassary since gameValidator.validateUserIsPlayer already checks this but I don't want to see a warning
       throw new ForbiddenError(`Player with ID ${userId} is not in the game.`);
     }
     this.playersService.delete(playerToDelete.id);
-    
+
     this.update(gameId, game);
 
     return this.findOne(gameId);
   }
 
-async findAvailableGames(userId: number): Promise<Game[]> {
+  async findAvailableGames(userId: number): Promise<Game[]> {
     const publicGames = await this.gameRepository.find({
       where: {
         status: GameState.PREPARING,
@@ -146,15 +146,15 @@ async findAvailableGames(userId: number): Promise<Game[]> {
       },
       relations: ['host', 'players'],
     });
-    
+
     const user = await this.gameValidator.validateUserExists(userId);
     const userFriends = await this.friendshipService.getFriends(userId);
     const friendIds = userFriends.map(friend => friend.id);
-    
+
     if (friendIds.length === 0) {
-      return publicGames; 
+      return publicGames;
     }
-    
+
     // Get friends-only games where the host is a friend of the user
     const friendsOnlyGames = await this.gameRepository.find({
       where: {
@@ -166,28 +166,28 @@ async findAvailableGames(userId: number): Promise<Game[]> {
       },
       relations: ['host', 'players'],
     });
-    
+
     return [...publicGames, ...friendsOnlyGames];
   }
 
   async retrieveCurrentGame(userId: number): Promise<Game | null> {
-      // This method retrieves the game the user is currently in, if any
-      const user = await this.gameValidator.validateUserExists(userId);
-      
-      const game = await this.gameRepository.findOne({
-          where: {
-              playerProfiles: { user: { id: user.id } },
-              status: In([GameState.IN_PROGRESS, GameState.PREPARING]),
-          },
-          relations: ['host', 'players', 'playerProfiles', 'playerProfiles.user'],
-      });
+    // This method retrieves the game the user is currently in, if any
+    const user = await this.gameValidator.validateUserExists(userId);
 
-  return game || null;
+    const game = await this.gameRepository.findOne({
+      where: {
+        playerProfiles: { user: { id: user.id } },
+        status: In([GameState.IN_PROGRESS, GameState.PREPARING]),
+      },
+      relations: ['host', 'players', 'playerProfiles', 'playerProfiles.user'],
+    });
+
+    return game || null;
   }
 
   async addRoundToGame(gameId: number, topicId: number): Promise<Game> {
     const game = await this.gameValidator.validateGameExists(gameId);
-    
+
     this.gameValidator.validateGameState(game, GameState.IN_PROGRESS);
 
     const currentRound = game.gameRounds.length;
@@ -198,14 +198,14 @@ async findAvailableGames(userId: number): Promise<Game[]> {
     }
 
     const round = await this.roundsService.createRound(game, prompt, currentRound + 1);
-    
+
     game.gameRounds.push(round);
     game.substate = GameSubstate.GIVING_ANSWER; // Set substate to giving answer
 
     return this.gameRepository.save(game);
   }
 
-  async retrieveCurrentRound(game : Game): Promise<Round> {
+  async retrieveCurrentRound(game: Game): Promise<Round> {
 
     // This method retrieves the current round of the game, if any
     if (!game || !game.gameRounds || game.gameRounds.length === 0) {
@@ -221,7 +221,7 @@ async findAvailableGames(userId: number): Promise<Game[]> {
     return currentRound;
   }
 
-  async submitAnswer(playerId : number, createAnswerDto: CreateAnswerDto, round : Round ): Promise<void> {
+  async submitAnswer(playerId: number, createAnswerDto: CreateAnswerDto, round: Round): Promise<void> {
     this.playersService.addAnswerToPlayer(playerId, createAnswerDto, round);
   }
 
@@ -241,9 +241,9 @@ async findAvailableGames(userId: number): Promise<Game[]> {
 
   }
 
-  async switchSubstate(gameId: number,currentSubState ,newSubstate: GameSubstate): Promise<Game> {
+  async switchSubstate(gameId: number, currentSubState, newSubstate: GameSubstate): Promise<Game> {
     const game = await this.gameValidator.validateGameExists(gameId);
-    
+
     this.gameValidator.validateGameSubstate(game, currentSubState);
 
     game.substate = newSubstate;
@@ -257,7 +257,7 @@ async findAvailableGames(userId: number): Promise<Game[]> {
 
   async getVotesForAnswer(answerId: number): Promise<Vote[]> {
     return this.answersService.getVotesForAnswer(answerId);
-    
+
   }
 
   // These methods provide convenience wrappers around validator functions

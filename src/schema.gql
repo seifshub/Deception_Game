@@ -34,6 +34,74 @@ enum FriendshipStatus {
   REJECTED
 }
 
+type Topic {
+  id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  deletedAt: DateTime
+  name: String!
+  description: String
+  isActive: Boolean!
+  prompts: [Prompt!]
+}
+
+type Prompt {
+  id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  deletedAt: DateTime
+  promptContent: String!
+  correctAnswer: String!
+  isActive: Boolean!
+  topic: Topic!
+}
+
+type Round {
+  id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  deletedAt: DateTime
+  game: Game!
+  prompt: Prompt
+  answers: Answer
+  roundNumber: Int!
+  isCompleted: Boolean!
+}
+
+type Vote {
+  id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  deletedAt: DateTime
+  player: Player!
+  answer: Answer
+  isRight: Boolean!
+  roundNumber: Int!
+}
+
+type Answer {
+  id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  deletedAt: DateTime
+  content: String!
+  player: Player!
+  round: Round!
+  votes: [Vote!]!
+}
+
+type Player {
+  id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  deletedAt: DateTime
+  user: User!
+  game: Game!
+  answers: Answer
+  score: Int!
+  votes: [Vote!]
+}
+
 type Game {
   id: ID!
   createdAt: DateTime!
@@ -46,10 +114,12 @@ type Game {
   """The host of the game"""
   host: User!
 
-  """Players in the game"""
-  players: [User!]!
+  """Rounds in the game"""
+  gameRounds: [Round!]
   name: String!
   size: Int!
+  totalRounds: Int!
+  playerProfiles: [Player!]!
 }
 
 enum GameState {
@@ -75,6 +145,17 @@ enum Visibility {
   FRIENDS_ONLY
 }
 
+type PaymentSession {
+  id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  deletedAt: DateTime
+  stripeSessionId: String!
+  stripeExpiresAt: Int!
+  completed: Boolean!
+  user: User!
+}
+
 type User {
   id: ID!
   createdAt: DateTime!
@@ -84,10 +165,12 @@ type User {
   email: String!
   username: String!
   role: Role!
+  isPremium: Boolean!
   sentFriendRequests: [Friendship!]!
   receivedFriendRequests: [Friendship!]!
   hostedGames: [Game!]!
-  joinedGames: [Game!]!
+  paymentSessions: [PaymentSession!]!
+  playerProfiles: [Player!]!
 }
 
 type Notification {
@@ -114,26 +197,9 @@ enum Role {
   Admin
 }
 
-type Prompt {
-  id: ID!
-  createdAt: DateTime!
-  updatedAt: DateTime!
-  deletedAt: DateTime
-  promptContent: String!
-  correctAnswer: String!
-  isActive: Boolean!
-  topic: Topic!
-}
-
-type Topic {
-  id: ID!
-  createdAt: DateTime!
-  updatedAt: DateTime!
-  deletedAt: DateTime
-  name: String!
-  description: String
-  isActive: Boolean!
-  prompts: [Prompt!]
+type PaymentResponse {
+  checkoutUrl: String!
+  sessionId: String!
 }
 
 type Query {
@@ -156,6 +222,11 @@ type Mutation {
   joinGame(gameId: ID!): Game!
   update(gameId: ID!, updateInput: UpdateGameInput!): Game!
   leaveGame(gameId: ID!): Game!
+
+  """
+  Creates a Stripe Checkout Session for a one-time “lifetime premium” purchase
+  """
+  createPayment: PaymentResponse!
 }
 
 input CreateItemInput {
@@ -172,12 +243,14 @@ input CreateGameInput {
   name: String!
   size: Int
   visibility: Visibility
+  rounds: Int
 }
 
 input UpdateGameInput {
   name: String
   size: Int
   visibility: Visibility
+  rounds: Int
   status: GameState
   substate: GameSubstate
 }

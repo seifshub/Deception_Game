@@ -3,10 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DeepPartial, Repository } from 'typeorm';
 import { Vote } from './entities/vote.entity';
 import { CreateVoteInput } from './dto/create-vote.input';
-import { UpdateVoteInput } from './dto/update-vote.input';
 import { GenericCrudService } from '../common/services/generic.crud.service';
 import { Player } from '../players/entities/player.entity';
-import { Answer } from '../answers/answers.entity';
 import { AnswersService } from 'src/answers/answers.service';
 
 @Injectable()
@@ -15,36 +13,36 @@ export class VotesService extends GenericCrudService<
   DeepPartial<Vote>,
   DeepPartial<Vote>
 > {
-  constructor( 
+  constructor(
     @InjectRepository(Vote)
     private readonly voteRepository: Repository<Vote>,
-    private readonly answerService: AnswersService, 
+    private readonly answerService: AnswersService,
   ) {
     super(voteRepository);
   }
 
-  async createVote(createVoteInput: CreateVoteInput, player : Player , roundNumber : number): Promise<Vote> {
+  async createVote(
+    createVoteInput: CreateVoteInput,
+    player: Player,
+    roundNumber: number,
+  ): Promise<Vote> {
     const { answerId } = createVoteInput;
-    if (answerId < Number.MAX_SAFE_INTEGER){
-        const answer = await this;this.answerService.findOne(answerId);
-        return this.create(
-        {
-            ...createVoteInput,
-            player,
-            answer,
-            roundNumber,
-        } as DeepPartial<Vote>
-    );
-    }
-    else {
-        return this.create(
-        {
-            ...createVoteInput,
-            player,
-            roundNumber,
-            isRight : true,
-        } as DeepPartial<Vote>
-    );
+    if (answerId < Number.MAX_SAFE_INTEGER) {
+      const answer = await this;
+      this.answerService.findOne(answerId);
+      return this.create({
+        ...createVoteInput,
+        player,
+        answer,
+        roundNumber,
+      } as DeepPartial<Vote>);
+    } else {
+      return this.create({
+        ...createVoteInput,
+        player,
+        roundNumber,
+        isRight: true,
+      } as DeepPartial<Vote>);
     }
   }
 

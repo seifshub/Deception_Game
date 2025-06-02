@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Round } from './entities/round.entity';
 import { RoundsService } from './rounds.service';
@@ -8,10 +8,10 @@ import { PromptsModule } from '../prompts/prompts.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Round]),
-    GamesModule,
-    PromptsModule
+    forwardRef(() => GamesModule),
+    PromptsModule,
   ],
   providers: [RoundsService],
-  exports: [RoundsService]
+  exports: [RoundsService],
 })
 export class RoundsModule {}

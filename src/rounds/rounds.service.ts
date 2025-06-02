@@ -18,9 +18,12 @@ export class RoundsService extends GenericCrudService<
   ) {
     super(roundRepository);
   }
-  
-  async createRound(game: Game, prompt: Prompt, roundNumber: number ): Promise<Round> {
-    
+
+  async createRound(
+    game: Game,
+    prompt: Prompt,
+    roundNumber: number,
+  ): Promise<Round> {
     const round = this.create({
       roundNumber,
       game,
@@ -31,9 +34,6 @@ export class RoundsService extends GenericCrudService<
   }
 
   async completeRound(id: number): Promise<Round> {
-    
     return this.update(id, { isCompleted: true });
-    
   }
-
 }

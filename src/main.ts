@@ -6,16 +6,18 @@ import { GlobalExceptionFilter } from './common/filters/global-exception.filter'
 import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { bodyParser: false });
 
   app.use(cookieParser());
 
-  app.use(helmet({
+  app.use(
+    helmet({
       contentSecurityPolicy: false,
       crossOriginEmbedderPolicy: false,
       crossOriginOpenerPolicy: false,
       crossOriginResourcePolicy: false,
-  }));
+    }),
+  );
 
   app.enableCors({
     origin: true,
@@ -32,7 +34,7 @@ async function bootstrap() {
       },
       exceptionFactory: (errors) => {
         return new BadRequestException(errors);
-      }
+      },
     }),
   );
 

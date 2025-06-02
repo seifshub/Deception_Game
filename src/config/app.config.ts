@@ -13,4 +13,13 @@ export default registerAs('app', () => ({
   session: {
     secret: process.env.SESSION_SECRET,
   },
+  stripe: {
+    secretKey: process.env.STRIPE_SECRET_KEY,
+    currency: process.env.STRIPE_CURRENCY,
+    webhookSigningSecret: process.env.STRIPE_WEBHOOK_SIGNING_SECRET,
+    webhookRoute: process.env.STRIPE_WEBHOOK_ROUTE,
+  },
+  frontend: {
+    url: process.env.FRONTEND_URL,
+  },
 }));
