@@ -102,7 +102,7 @@ export class GamesService extends GenericCrudService<
 
     game.status = GameState.FINISHED;
 
-    return this.gameRepository.save(game);
+    return this.update(gameId, game);
   }
 
   async leaveGame(gameId: number, userId: number): Promise<Game> {
@@ -139,15 +139,14 @@ export class GamesService extends GenericCrudService<
   }
 
   async findAvailableGames(userId: number): Promise<Game[]> {
-    const publicGames = await this.gameRepository.find({
-      where: {
+    const publicGames = await this.findBy(
+      {
         status: GameState.PREPARING,
         visibility: Visibility.PUBLIC,
-      },
-      relations: ['host', 'players'],
-    });
+      }    
+    );
 
-    const user = await this.gameValidator.validateUserExists(userId);
+    await this.gameValidator.validateUserExists(userId);
     const userFriends = await this.friendshipService.getFriends(userId);
     const friendIds = userFriends.map(friend => friend.id);
 
@@ -156,15 +155,13 @@ export class GamesService extends GenericCrudService<
     }
 
     // Get friends-only games where the host is a friend of the user
-    const friendsOnlyGames = await this.gameRepository.find({
-      where: {
+    const friendsOnlyGames = await this.findBy(
+      {
         status: GameState.PREPARING,
         visibility: Visibility.FRIENDS_ONLY,
         host: {
           id: In(friendIds),
         },
-      },
-      relations: ['host', 'players'],
     });
 
     return [...publicGames, ...friendsOnlyGames];
@@ -174,12 +171,9 @@ export class GamesService extends GenericCrudService<
     // This method retrieves the game the user is currently in, if any
     const user = await this.gameValidator.validateUserExists(userId);
 
-    const game = await this.gameRepository.findOne({
-      where: {
+    const game = await this.findOneBy({
         playerProfiles: { user: { id: user.id } },
         status: In([GameState.IN_PROGRESS, GameState.PREPARING]),
-      },
-      relations: ['host', 'players', 'playerProfiles', 'playerProfiles.user'],
     });
 
     return game || null;
