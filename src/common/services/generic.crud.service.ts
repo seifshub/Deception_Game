@@ -26,8 +26,20 @@ export class GenericCrudService<
     return result;
   }
 
+  async findOneBy(where: FindOptionsWhere<Entity>): Promise<Entity> {
+    const result = await this.repository.findOne({ where });
+    if (!result) {
+      throw new NotFoundException(`Entity not found with criteria`);
+    }
+    return result;
+  }
+
   async findAll(): Promise<Entity[]> {
     return this.repository.find();
+  }
+
+  async findBy(where: FindOptionsWhere<Entity>): Promise<Entity[]> {
+  return this.repository.find({ where });
   }
 
   async create(data: CreateDTO): Promise<Entity> {

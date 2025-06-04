@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deception Game WebSocket Test</title>
+    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+    <style>
+        :root {
+            --primary: #3f51b5;
+            --primary-light: #757de8;
+            --primary-dark: #002984;
+            --secondary: #ff4081;
+            --text: #212121;
+            --background: #f5f5f5;
+            --card: #ffffff;
+            --border: #e0e0e0;
+            --success: #4caf50;
+            --error: #f44336;
+            --warning: #ff9800;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+        }
+        
+        h1, h2 {
+            color: var(--primary-dark);
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 8px;
+        }
+        
+        .card {
+            background-color: var(--card);
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        input, button {
+            font-family: inherit;
+            font-size: 1rem;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        input {
+            width: 200px;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(63, 81, 181, 0.2);
+        }
+        
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            min-width: 100px;
+        }
+        
+        button:hover:not(:disabled) {
+            background-color: var(--primary-dark);
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        #status {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        
+        .status-connected {
+            color: var(--success);
+        }
+        
+        .status-disconnected {
+            color: var(--error);
+        }
+        
+        .status-error {
+            color: var(--warning);
+        }
+        
+        #messages {
+            height: 350px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 10px;
+            background-color: white;
+            margin-top: 20px;
+        }
+        
+        .event {
+            margin-bottom: 8px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            border-left: 4px solid transparent;
+        }
+        
+        .sent {
+            background-color: #e3f2fd;
+            border-left-color: var(--primary);
+        }
+        
+        .received {
+            background-color: #f5f5f5;
+            border-left-color: #9e9e9e;
+        }
+        
+        .event-group {
+            display: flex;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .badge {
+            background-color: var(--primary-light);
+            color: white;
+            font-size: 0.8rem;
+            border-radius: 20px;
+            padding: 3px 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Deception Game WebSocket Test</h1>
+        <div class="badge">Testing Tool</div>
+    </div>
+    
+    <div class="card">
+        <h2>Login (Required Before Socket Connection)</h2>
+        <form id="loginForm">
+            <div class="form-group">
+                <input type="text" id="username" placeholder="Username" required>
+                <input type="password" id="password" placeholder="Password" required>
+                <button type="submit">Login</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>Socket Connection</h2>
+        <div class="form-group">
+            <button id="connectBtn">Connect to WebSocket</button>
+            <button id="disconnectBtn" disabled>Disconnect</button>
+            <div id="status" class="status-disconnected">Status: Disconnected</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Game Events</h2>
+        <div class="form-group">
+            <button id="joinRoomBtn" disabled>Join Game Room</button>
+            <input type="number" id="gameId" placeholder="Game ID" value="1">
+        </div>
+        <div class="form-group">
+            <button id="leaveRoomBtn" disabled>Leave Game Room</button>
+        </div>
+        <div class="form-group">
+            <button id="sendMessageBtn" disabled>Send Game Message</button>
+            <input type="text" id="message" placeholder="Message" value="Hello players!">
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Event Log</h2>
+        <div id="messages">
+            <div class="event">Events will appear here...</div>
+        </div>
+    </div>
+
+    <script>
+        let socket;
+        let currentGameId;
+        
+        // DOM elements
+        const loginForm = document.getElementById('loginForm');
+        const statusDiv = document.getElementById('status');
+        const messagesDiv = document.getElementById('messages');
+        const connectBtn = document.getElementById('connectBtn');
+        const disconnectBtn = document.getElementById('disconnectBtn');
+        const joinRoomBtn = document.getElementById('joinRoomBtn');
+        const leaveRoomBtn = document.getElementById('leaveRoomBtn');
+        const sendMessageBtn = document.getElementById('sendMessageBtn');
+        const gameIdInput = document.getElementById('gameId');
+        const messageInput = document.getElementById('message');
+
+        // Add event to messages div with timestamp
+        function addEvent(type, message, isSent = false) {
+            const timestamp = new Date().toLocaleTimeString();
+            const eventDiv = document.createElement('div');
+            eventDiv.className = `event ${isSent ? 'sent' : 'received'}`;
+            
+            const timeSpan = document.createElement('span');
+            timeSpan.style.color = '#999';
+            timeSpan.style.fontSize = '0.8rem';
+            timeSpan.style.marginRight = '8px';
+            timeSpan.textContent = `[${timestamp}]`;
+            
+            const typeSpan = document.createElement('span');
+            typeSpan.style.fontWeight = 'bold';
+            typeSpan.textContent = type;
+            
+            const messageContent = document.createElement('div');
+            messageContent.style.marginTop = '4px';
+            messageContent.textContent = typeof message === 'object' ? JSON.stringify(message, null, 2) : message;
+            
+            eventDiv.appendChild(timeSpan);
+            eventDiv.appendChild(typeSpan);
+            eventDiv.appendChild(document.createTextNode(': '));
+            eventDiv.appendChild(messageContent);
+            
+            messagesDiv.appendChild(eventDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        // Update status with appropriate styling
+        function updateStatus(message, type) {
+            statusDiv.textContent = `Status: ${message}`;
+            statusDiv.className = '';
+            statusDiv.classList.add(`status-${type}`);
+        }
+
+        // Handle login
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const response = await fetch('/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password }),
+                    credentials: 'include' // Important for cookies
+                });
+                
+                if (response.ok) {
+                    // Wait a moment for the cookie to be properly set
+                    setTimeout(() => {
+                        addEvent('Login', 'Successful login');
+                        connectBtn.disabled = false;
+                    }, 500);
+                } else {
+                    const error = await response.text();
+                    addEvent('Login Error', error);
+                }
+            } catch (error) {
+                addEvent('Login Error', error.message);
+            }
+        });
+
+        // Connect to socket
+        connectBtn.addEventListener('click', () => {
+            socket = io('http://localhost:3000/games', {
+                withCredentials: true, // Important for sending cookies
+                extraHeaders: {
+                    'Access-Control-Allow-Credentials': 'true'
+                }
+            });
+            
+            // Socket event listeners
+            socket.on('connect', () => {
+                updateStatus('Connected', 'connected');
+                addEvent('Connection', 'Socket connected');
+                
+                // Authenticate after connection
+                socket.emit('authenticate', {}, (response) => {
+                    if (response && response.success) {
+                        addEvent('Authentication', `Authenticated as ${response.user.username}`, true);
+                        connectBtn.disabled = true;
+                        disconnectBtn.disabled = false;
+                        joinRoomBtn.disabled = false;
+                    } else {
+                        addEvent('Authentication Error', 'Failed to authenticate', true);
+                        socket.disconnect();
+                    }
+                });
+            });
+            
+            socket.on('disconnect', () => {
+                updateStatus('Disconnected', 'disconnected');
+                addEvent('Connection', 'Socket disconnected');
+                connectBtn.disabled = false;
+                disconnectBtn.disabled = true;
+                joinRoomBtn.disabled = true;
+                leaveRoomBtn.disabled = true;
+                sendMessageBtn.disabled = true;
+            });
+            
+            socket.on('connect_error', (error) => {
+                updateStatus('Connection Error', 'error');
+                addEvent('Connection Error', error.message);
+            });
+            
+            // Game-specific events
+            socket.on('playerJoined', (data) => {
+                addEvent('Player Joined', data);
+            });
+            
+            socket.on('playerLeft', (data) => {
+                addEvent('Player Left', data);
+            });
+            
+            socket.on('gameMessage', (data) => {
+                addEvent('Game Message', data);
+            });
+
+            socket.on('gameStarted', (data) => {
+                addEvent('Game Started', data);
+            });
+
+            socket.on('gameEnded', (data) => {
+                addEvent('Game Ended', data);
+            });
+
+            socket.on('gameAborted', (data) => {
+                addEvent('Game Aborted', data);
+            });
+
+            socket.on('chooseTopic', (data) => {
+                addEvent('Choose Topic', data);
+            });
+
+            socket.on('answerPrompt', (data) => {
+                addEvent('Answer Prompt', data);
+            });
+        });
+        
+        // Disconnect from socket
+        disconnectBtn.addEventListener('click', () => {
+            if (socket) {
+                socket.disconnect();
+            }
+        });
+        
+        // Join game room
+        joinRoomBtn.addEventListener('click', () => {
+            currentGameId = parseInt(gameIdInput.value);
+            socket.emit('joinGameRoom', currentGameId, (response) => {
+                if (response && response.success) {
+                    addEvent('Join Room', `Joined game room ${currentGameId}`, true);
+                    leaveRoomBtn.disabled = false;
+                    sendMessageBtn.disabled = false;
+                } else {
+                    addEvent('Join Room Error', response || 'Failed to join room', true);
+                }
+            });
+        });
+        
+        // Leave game room
+        leaveRoomBtn.addEventListener('click', () => {
+            socket.emit('leaveGameRoom', currentGameId, (response) => {
+                if (response && response.success) {
+                    addEvent('Leave Room', `Left game room ${currentGameId}`, true);
+                    leaveRoomBtn.disabled = true;
+                    sendMessageBtn.disabled = true;
+                } else {
+                    addEvent('Leave Room Error', response || 'Failed to leave room', true);
+                }
+            });
+        });
+        
+        // Send game message
+        sendMessageBtn.addEventListener('click', () => {
+            const messageText = messageInput.value;
+            socket.emit('gameMessage', { gameId: currentGameId, message: messageText }, (response) => {
+                if (response && response.success) {
+                    addEvent('Send Message', `Sent: ${messageText}`, true);
+                } else {
+                    addEvent('Send Message Error', response || 'Failed to send message', true);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

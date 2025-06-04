@@ -17,10 +17,10 @@ export class GameValidator {
   ) {}
 
   async validateGameExists(gameId: number): Promise<Game> {
-    const game = await this.gameRepository.findOne({
-      where: { id: gameId },
-      relations: ['host', 'players'],
-    });
+    const game = await this.gameRepository.findOneBy({
+      id: gameId 
+    },
+    );
 
     if (!game) {
       throw new NotFoundException(`Game with ID ${gameId} not found`);

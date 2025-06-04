@@ -1,5 +1,5 @@
 import { InputType, Field } from '@nestjs/graphql';
-import { IsNotEmpty, IsInt, Min, IsOptional, IsEnum } from 'class-validator';
+import { IsNotEmpty, IsInt, Min, IsOptional, IsEnum, Max } from 'class-validator';
 import { Visibility } from '../enums/game.visibilty.enum';
 
 @InputType()
@@ -11,6 +11,7 @@ export class CreateGameInput {
     @Field({ nullable: true })
     @IsOptional()
     @IsInt()
+    @Max(10)
     @Min(1)
     size?: number;
 
@@ -22,6 +23,7 @@ export class CreateGameInput {
     @Field({ nullable: true })
     @IsOptional()
     @IsInt()
+    @Max(10)
     @Min(1)
     rounds?: number;
 }
