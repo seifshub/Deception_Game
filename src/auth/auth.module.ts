@@ -1,10 +1,14 @@
-import { Inject, MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+// auth.module.ts
+import {
+  Inject,
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+} from '@nestjs/common';
 import { HashingService } from './hashing/hashing.service';
 import { BcryptService } from './hashing/bcrypt.service';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import * as session from 'express-session';
-import * as passport from 'passport';
 import AppConfig from '../config/app.config';
 import { ConfigType } from '@nestjs/config';
 import appConfig from '../config/app.config';
@@ -14,6 +18,8 @@ import { AuthenticationGuard } from './guards/authentication.guard';
 import { SessionGuard } from './guards/session.guard';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../users/entities/user.entity';
+import { cookieParserMiddleware, createSessionMiddleware, passportMiddlewares } from 'src/common/middlewares/session.middleware';
+
 
 @Module({
   imports: [TypeOrmModule.forFeature([User])],
@@ -39,21 +45,18 @@ export class AuthModule implements NestModule {
   ) {}
 
   configure(consumer: MiddlewareConsumer) {
+    const sessionMiddleware = createSessionMiddleware(
+      this.appConfiguration.session.secret!,
+    );
+
     consumer
       .apply(
-        session({
-          secret: this.appConfiguration.session.secret!,
-          resave: false,
-          saveUninitialized: false,
-          cookie: {
-            sameSite: 'none', // Changed from 'lax' to 'none' for cross-origin
-            secure: false,    // In production this should be true, but for local development false
-            httpOnly: true,
-            maxAge: 1000 * 60 * 60 * 24, // 1 day
-          },
-        }),
-        passport.initialize(),
-        passport.session(),
+        cookieParserMiddleware,
+        sessionMiddleware,
+        ...passportMiddlewares,
+        (req, res, next) => {
+          next();
+        },
       )
       .forRoutes('*');
   }

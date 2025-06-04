@@ -48,54 +48,55 @@ export class GamesGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {}
 
   async handleConnection(client: Socket) {
-    const user = client.request[REQUEST_USER_KEY] as ActiveUserData;
-
-    if (!user) {
-      this.logger.error(
-        `Unauthorized connection attempt by client: ${client.id}`,
-      );
-      client.disconnect();
-      return;
-    }
-
-    this.gamers.set(user.sub, client);
-    this.logger.log(`User ${user.username} connected. Socket ID: ${client.id}`);
+    // Accept all connections without authentication
+    this.logger.log(`New client connected: ${client.id}`);
   }
 
   async handleDisconnect(client: Socket) {
+    // Try to get user data, but don't require it
     const user = client.request[REQUEST_USER_KEY] as ActiveUserData;
-    if (!user) {
-      this.logger.error(
-        `Unauthorized disconnection attempt by client: ${client.id}`,
-      );
-      throw new WsException('Unauthorized: No user data found');
+    
+    if (user) {
+      // If we have user data, handle the game state
+      const game = await this.gamesService.retrieveCurrentGame(user.sub);
+      if (game) {
+        const updatedGame = await this.gamesService.leaveGame(game.id, user.sub);
+        this.gamers.delete(user.sub);
+        
+        if(updatedGame.status === GameState.ABORTED) {
+          this.logger.log(`Game ${updatedGame.id} was aborted. Notifying players.`);
+          this.broadcastGameUpdate(updatedGame.id, 'gameAborted', {
+            message: 'The game has been aborted.',
+          });
+          // disconnect all players from the game room
+          const roomName = `game:${updatedGame.id}`;
+          this.server.to(roomName).socketsLeave(roomName);
+          this.logger.log(`All players disconnected from room ${roomName}`);
+        }
+      }
     }
-
-    const game = await this.gamesService.retrieveCurrentGame(user.sub);
-    if (!game) {
-      this.logger.warn(
-        `User ${user.username} disconnected without being in a game. Socket ID: ${client.id}`,
-      );
-      return;
-    }
-    const updatedGame = await this.gamesService.leaveGame(game.id, user.sub);
-
-    this.gamers.delete(user.sub);
+    
     this.logger.log(`Client disconnected: ${client.id}`);
+  }
 
-    if(updatedGame.status === GameState.ABORTED) {
-      this.logger.log(
-        `Game ${updatedGame.id} was aborted. Notifying players.`,
-      );
-      this.broadcastGameUpdate(updatedGame.id, 'gameAborted', {
-        message: 'The game has been aborted.',
-      });
-      // disconnect all players from the game room
-      const roomName = `game:${updatedGame.id}`;
-      this.server.to(roomName).socketsLeave(roomName);
-      this.logger.log(`All players disconnected from room ${roomName}`);
-      return;
-    }
+  @UseGuards(WsSessionGuard)
+  @SubscribeMessage('authenticate')
+  async handleAuthentication(
+    @ConnectedSocket() client: Socket,
+    @WsActiveUser() user: ActiveUserData,
+  ) {
+    // Store the socket for the authenticated user
+    this.gamers.set(user.sub, client);
+    this.logger.log(`User ${user.username} authenticated. Socket ID: ${client.id}`);
+    
+    return { 
+      success: true,
+      message: 'Authentication successful',
+      user: {
+        id: user.sub,
+        username: user.username
+      }
+    };
   }
 
   @UseGuards(WsSessionGuard)

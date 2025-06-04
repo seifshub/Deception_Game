@@ -14,6 +14,14 @@ import { promisify } from 'util';
 import { Auth } from './decorators/auth.decorator';
 import { AuthType } from './enums/auth-type.enums';
 
+// Define a custom interface extending Express Request
+interface AuthenticatedRequest extends Request {
+  logIn: (user: any, callback: (err: any) => void) => void;
+  isAuthenticated: () => boolean;
+  user?: any;
+  sessionID?: string;
+}
+
 @Auth(AuthType.None)
 @Controller('auth')
 export class AuthController {
@@ -22,18 +30,19 @@ export class AuthController {
   @Post('register')
   signUp(@Body() signUpDto: SignUpDto) {
     return this.authService.signUp(signUpDto);
-  }
-
-  @HttpCode(HttpStatus.OK)
+  }  @HttpCode(HttpStatus.OK)
   @Post('login')
-  async signIn(@Req() request: Request, @Body() signInDto: SignInDto) {
+  async signIn(@Req() request: AuthenticatedRequest, @Body() signInDto: SignInDto) {
     const user = await this.authService.signIn(signInDto);
+    
     await promisify(request.logIn).call(request, user);
+    
+    return { success: true };
   }
 
   @HttpCode(HttpStatus.OK)
   @Post('logout')
-  async logout(@Req() request: Request) {
+  async logout(@Req() request: AuthenticatedRequest) {
     return this.authService.logout(request);
   }
 }
